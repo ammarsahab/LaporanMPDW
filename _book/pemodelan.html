@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Bab 4 Pemodelan | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</title>
+  <meta name="description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Bab 4 Pemodelan | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Bab 4 Pemodelan | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  
+  <meta name="twitter:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  
+
+<meta name="author" content="Adley Dityo Valentinus Putra (G14180009)" />
+<meta name="author" content="Muhammad Ammar Sahab (G14190020)" />
+<meta name="author" content="Putri Eka Perdanti (G14190027)" />
+<meta name="author" content="Farhan Narendra Achyara (G14190050)" />
+<meta name="author" content="Grashella Clara Nesa Br Ginting (G14190086)" />
+
+
+<meta name="date" content="2022-04-21" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"/>
+<link rel="next" href="references.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+
+<li class="divider"></li>
+<li><a href="index.html#pendahuluan">Pendahuluan<span></span></a>
+<ul>
+<li><a href="index.html#struktur-penelitian">Struktur penelitian<span></span></a></li>
+<li><a href="index.html#ekstraksi-data">Ekstraksi data<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html"><i class="fa fa-check"></i><b>1</b> Praproses dan Eksplorasi Data<span></span></a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#interval-waktu-data"><i class="fa fa-check"></i><b>1.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="1.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas"><i class="fa fa-check"></i><b>1.2</b> Pola-pola data dan stasioneritas<span></span></a></li>
+<li class="chapter" data-level="1.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#latar-belakang"><i class="fa fa-check"></i><b>1.3</b> Latar Belakang<span></span></a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009"><i class="fa fa-check"></i><b>1.3.1</b> Harga Minyak Mentah Tahun 2009<span></span></a></li>
+<li class="chapter" data-level="1.3.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#arab-spring"><i class="fa fa-check"></i><b>1.3.2</b> Arab Spring<span></span></a></li>
+<li class="chapter" data-level="1.3.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#shale-revolution"><i class="fa fa-check"></i><b>1.3.3</b> Shale Revolution<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural"><i class="fa fa-check"></i><b>1.4</b> Titik-titik perubahan struktural<span></span></a></li>
+<li class="chapter" data-level="1.5" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#kestastioneran"><i class="fa fa-check"></i><b>1.5</b> Kestastioneran<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html"><i class="fa fa-check"></i><b>2</b> Praproses dan Eksplorasi Data (2017-2022)<span></span></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1"><i class="fa fa-check"></i><b>2.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data"><i class="fa fa-check"></i><b>2.2</b> Plot data<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1"><i class="fa fa-check"></i><b>2.3</b> Latar Belakang<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><i class="fa fa-check"></i><b>3</b> Optimisasi Parameter Pemulusan dengan Validasi Silang<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metode"><i class="fa fa-check"></i><b>3.1</b> Metode<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-deret-waktu"><i class="fa fa-check"></i><b>3.1.1</b> Validasi Silang Deret Waktu<span></span></a></li>
+<li class="chapter" data-level="3.1.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metrik"><i class="fa fa-check"></i><b>3.1.2</b> Metrik<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#single-moving-average"><i class="fa fa-check"></i><b>3.2</b> Single Moving Average<span></span></a></li>
+<li class="chapter" data-level="3.3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-untuk-sma"><i class="fa fa-check"></i><b>3.3</b> Validasi silang untuk SMA<span></span></a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan"><i class="fa fa-check"></i><b>3.3.1</b> Kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#dma"><i class="fa fa-check"></i><b>3.4</b> DMA<span></span></a></li>
+<li class="chapter" data-level="3.5" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#ses"><i class="fa fa-check"></i><b>3.5</b> SES<span></span></a></li>
+<li class="chapter" data-level="3.6" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#des"><i class="fa fa-check"></i><b>3.6</b> DES<span></span></a></li>
+<li class="chapter" data-level="3.7" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan-1"><i class="fa fa-check"></i><b>3.7</b> Kesimpulan<span></span></a></li>
+<li class="chapter" data-level="3.8" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#addendum-last-block"><i class="fa fa-check"></i><b>3.8</b> Addendum: Last Block<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="pemodelan.html"><a href="pemodelan.html"><i class="fa fa-check"></i><b>4</b> Pemodelan<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="pemodelan.html"><a href="pemodelan.html#analisis-intervensi-untuk-data-mingguan"><i class="fa fa-check"></i><b>4.1</b> Analisis intervensi untuk data mingguan<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="pemodelan.html"><a href="pemodelan.html#covid"><i class="fa fa-check"></i><b>4.1.1</b> COVID<span></span></a></li>
+<li class="chapter" data-level="4.1.2" data-path="pemodelan.html"><a href="pemodelan.html#covid-rebuilding"><i class="fa fa-check"></i><b>4.1.2</b> COVID rebuilding<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="pemodelan" class="section level1 hasAnchor" number="4">
+<h1><span class="header-section-number">Bab 4</span> Pemodelan<a href="pemodelan.html#pemodelan" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div class="sourceCode" id="cb120"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb120-1"><a href="pemodelan.html#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forecast)</span>
+<span id="cb120-2"><a href="pemodelan.html#cb120-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TSA)</span></code></pre></div>
+<div id="analisis-intervensi-untuk-data-mingguan" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">4.1</span> Analisis intervensi untuk data mingguan<a href="pemodelan.html#analisis-intervensi-untuk-data-mingguan" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="covid" class="section level3 hasAnchor" number="4.1.1">
+<h3><span class="header-section-number">4.1.1</span> COVID<a href="pemodelan.html#covid" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Secara umum metode pemulusan cukup buruk dalam meramal harga minyak saat COVID dan perang Rusia-Ukraina. Oleh karena itu, coba ambil data saat COVID terlebih dahulu. Jika dilihat dari tabel di bawah, harga minyak mulai turun pada minggu kesembilan 2020 (28 Februari 2020), dan tetap turun. Oleh karena itu, ambil dua titik data awal dari penurunan tersebut (28 Februari dan 06 Februari) untuk menandakan intervensi tersebut, lalu coba ramal titik-titik selanjutnya.</p>
+<div class="sourceCode" id="cb121"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb121-1"><a href="pemodelan.html#cb121-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(weeklyCrude[<span class="dv">160</span><span class="sc">:</span><span class="dv">170</span>])</span></code></pre></div>
+<table>
+<colgroup>
+<col width="5%" />
+<col width="7%" />
+<col width="3%" />
+<col width="4%" />
+<col width="2%" />
+<col width="2%" />
+<col width="9%" />
+<col width="15%" />
+<col width="16%" />
+<col width="6%" />
+<col width="3%" />
+<col width="6%" />
+<col width="9%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Week</th>
+<th align="left">Date</th>
+<th align="right">Close</th>
+<th align="left">Dist</th>
+<th align="right">6DW</th>
+<th align="right">8DW</th>
+<th align="left">2017 - Siklik</th>
+<th align="left">Awal 2018 - harga naik</th>
+<th align="left">Akhir 2018 - harga turun</th>
+<th align="left">Pra-COVID</th>
+<th align="left">COVID</th>
+<th align="left">Pemulihan</th>
+<th align="left">Vaksin, Varian</th>
+<th align="left">2022</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2020-W04</td>
+<td align="left">2020-01-24</td>
+<td align="right">54.19</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="even">
+<td align="left">2020-W05</td>
+<td align="left">2020-01-31</td>
+<td align="right">51.56</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-W06</td>
+<td align="left">2020-02-07</td>
+<td align="right">50.32</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="even">
+<td align="left">2020-W07</td>
+<td align="left">2020-02-14</td>
+<td align="right">52.05</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-W08</td>
+<td align="left">2020-02-21</td>
+<td align="right">53.38</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="even">
+<td align="left">2020-W09</td>
+<td align="left">2020-02-28</td>
+<td align="right">44.76</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-W10</td>
+<td align="left">2020-03-06</td>
+<td align="right">41.28</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="even">
+<td align="left">2020-W11</td>
+<td align="left">2020-03-13</td>
+<td align="right">31.73</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-W12</td>
+<td align="left">2020-03-20</td>
+<td align="right">22.43</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="even">
+<td align="left">2020-W13</td>
+<td align="left">2020-03-27</td>
+<td align="right">21.51</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-W14</td>
+<td align="left">2020-04-03</td>
+<td align="right">28.34</td>
+<td align="left">7 days</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">Lainnya</td>
+<td align="left">Lainnya</td>
+</tr>
+</tbody>
+</table>
+<p>Ambil semua data sampai 6 Maret 2020 (observasi ke-166) sebagai data latih. Titik intervensi COVID yang diambil adalah 28 Februari (observasi ke-166)</p>
+<div class="sourceCode" id="cb122"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb122-1"><a href="pemodelan.html#cb122-1" aria-hidden="true" tabindex="-1"></a>wcrude.covid<span class="ot">&lt;-</span><span class="fu">subset</span>(weeklyCrude, Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-04-13&quot;</span>))</span>
+<span id="cb122-2"><a href="pemodelan.html#cb122-2" aria-hidden="true" tabindex="-1"></a>wcrude.train<span class="ot">&lt;-</span><span class="fu">subset</span>(wcrude.covid, Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-03-06&quot;</span>))</span></code></pre></div>
+<p>Model Arima terbaik adalah <span class="math inline">\(ARIMA(1,1,1)\)</span> - note, ini cari sendiri aja</p>
+<div class="sourceCode" id="cb123"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb123-1"><a href="pemodelan.html#cb123-1" aria-hidden="true" tabindex="-1"></a>covArima<span class="ot">&lt;-</span><span class="fu">Arima</span>(wcrude.train<span class="sc">$</span>Close,</span>
+<span id="cb123-2"><a href="pemodelan.html#cb123-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),</span>
+<span id="cb123-3"><a href="pemodelan.html#cb123-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">method=</span><span class="st">&quot;ML&quot;</span>)</span></code></pre></div>
+<p>Diagnostik model sebenarnya cukup oke:</p>
+<div class="sourceCode" id="cb124"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb124-1"><a href="pemodelan.html#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(covArima)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-219-1.png" width="672" /></p>
+<pre><code>## 
+##  Ljung-Box test
+## 
+## data:  Residuals from ARIMA(1,1,1)
+## Q* = 5.0142, df = 8, p-value = 0.7561
+## 
+## Model df: 2.   Total lags used: 10</code></pre>
+<p>Tapi prediksi model tidak sesuai dengan apa yang akan terjadi. Bandingkan prediksi untuk 2 minggu saja:</p>
+<div class="sourceCode" id="cb126"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb126-1"><a href="pemodelan.html#cb126-1" aria-hidden="true" tabindex="-1"></a>forcdef<span class="ot">&lt;-</span><span class="fu">forecast</span>(covArima,<span class="dv">5</span>)</span>
+<span id="cb126-2"><a href="pemodelan.html#cb126-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb126-3"><a href="pemodelan.html#cb126-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb126-4"><a href="pemodelan.html#cb126-4" aria-hidden="true" tabindex="-1"></a>wcrude.covid[,<span class="st">`</span><span class="at">:=</span><span class="st">`</span>(<span class="st">&quot;fitted.def&quot;</span><span class="ot">=</span><span class="fu">c</span>(forcdef<span class="sc">$</span>fitted,<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">5</span>)),  </span>
+<span id="cb126-5"><a href="pemodelan.html#cb126-5" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;predicted.def&quot;</span><span class="ot">=</span><span class="fu">c</span>(<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">166</span>),forcdef<span class="sc">$</span>mean))]</span>
+<span id="cb126-6"><a href="pemodelan.html#cb126-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb126-7"><a href="pemodelan.html#cb126-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb126-8"><a href="pemodelan.html#cb126-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.covid[<span class="dv">150</span><span class="sc">:</span><span class="dv">168</span>])<span class="sc">+</span></span>
+<span id="cb126-9"><a href="pemodelan.html#cb126-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span></span>
+<span id="cb126-10"><a href="pemodelan.html#cb126-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>fitted.def,<span class="at">color=</span><span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb126-11"><a href="pemodelan.html#cb126-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.def,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>))<span class="sc">+</span></span>
+<span id="cb126-12"><a href="pemodelan.html#cb126-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.def,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>), <span class="at">size=</span><span class="dv">3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>)<span class="sc">+</span></span>
+<span id="cb126-13"><a href="pemodelan.html#cb126-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">name=</span><span class="st">&#39;Prediksi ARIMA&#39;</span>,</span>
+<span id="cb126-14"><a href="pemodelan.html#cb126-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span>, <span class="st">&#39;Prediksi&#39;</span>),</span>
+<span id="cb126-15"><a href="pemodelan.html#cb126-15" aria-hidden="true" tabindex="-1"></a>                     <span class="at">values=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span><span class="ot">=</span><span class="st">&#39;black&#39;</span>, <span class="st">&#39;Prediksi&#39;</span><span class="ot">=</span><span class="st">&#39;#DB0000&#39;</span>))<span class="sc">+</span></span>
+<span id="cb126-16"><a href="pemodelan.html#cb126-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<pre><code>## Warning: Removed 2 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 17 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 17 rows containing missing values (geom_point).</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-220-1.png" width="672" /></p>
+<p>Tentu prediksi tersebut cukup buruk. Lakukan pemodelan ARIMAX dengan sebuah fungsi transfer. Pada dasarnya kita akan membuat suatu peubah dummy pada 28 Februari 2020 untuk menandakan reaksi pasar terhadap COVID. Lalu akan dimodelkan dengan suatu fungsi:</p>
+<p><span class="math display">\[
+m_t=\frac{(\theta_0+\theta_1B+...+\theta_{q-1}B^{q-1})}{(1-\phi_1 B -...-\phi_p B^p)} P_t
+\]</span></p>
+<p>Dengan:
+<span class="math display">\[
+\begin{aligned}
+m_t&amp;=\text{ Pengaruh intervensi (COVID) di waktu ke-t}\\
+Z_t&amp;=\begin{cases}
+1, &amp; t=165 \text{ (28 Februari 2020, mulai COVID)}\\
+0, &amp;\text{lainnya}\\
+\end{cases}\\
+\end{aligned}
+\]</span></p>
+<p>Salah satu model paling sederhana adalah dengan <span class="math inline">\(AR(1)\)</span> - pada dasarnya model intervensi akan menjadi:</p>
+<p><span class="math display">\[
+\begin{aligned}
+m_t&amp;=\frac{\theta_0}{(1-\phi_1 B)} P_t\\
+(1-\phi_1B)m_t&amp;=\theta_0P_t\\
+m_t-\phi_1m_{t-1}&amp;=\theta_0P_t\\
+m_t&amp;=\theta_0P_t+\phi_1m_{t-1}
+\end{aligned}
+\]</span></p>
+<p>Saat <span class="math inline">\(P_{t}=1\)</span>, tentu <span class="math inline">\(P_{t-1}=0\)</span>, <span class="math inline">\(m_{t-2}=0\)</span> (intervensi belum memiliki efek). Oleh karena itu dapat dilihat bahwa di waktu intervensi ke-r:</p>
+<p><span class="math display">\[
+\begin{aligned}
+m_r&amp;=\theta_0\\
+m_{r+1}&amp;=\theta_0\cdot0+\phi_1m_{r}=\phi_1\theta_0\\
+m_{r+2}&amp;=\theta_0\cdot0+\phi_1m_{r+1}=\phi_1^2\theta_0\\
+\end{aligned}
+\]</span></p>
+<p>Dan seterusnya. Saat <span class="math inline">\(\phi_1&lt;0\)</span>, fungsi ini menandakan suatu efek yang lama-kelamaan mengalami <em>decay</em>. Coba modelkan fungsi yang ada dengan metode tersebut:</p>
+<div class="sourceCode" id="cb130"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb130-1"><a href="pemodelan.html#cb130-1" aria-hidden="true" tabindex="-1"></a>intvmod<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train<span class="sc">$</span>Close, <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),</span>
+<span id="cb130-2"><a href="pemodelan.html#cb130-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb130-3"><a href="pemodelan.html#cb130-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb130-4"><a href="pemodelan.html#cb130-4" aria-hidden="true" tabindex="-1"></a>intvmod</span></code></pre></div>
+<pre><code>## 
+## Call:
+## arimax(x = wcrude.train$Close, order = c(1, 1, 1), xtransf = data.frame(COVID = 1 * 
+##     (seq(nrow(wcrude.train)) == 165)), transfer = list(c(1, 0)))
+## 
+## Coefficients:
+##           ar1     ma1  COVID-AR1  COVID-MA0
+##       -0.8990  0.9625     1.5199    -7.9141
+## s.e.   0.0594  0.0388     0.3160     2.2452
+## 
+## sigma^2 estimated as 4.819:  log likelihood = -363.99,  aic = 735.98</code></pre>
+<p>Terlihat bahwa AIC model dengan intervensi lebih baik</p>
+<div class="sourceCode" id="cb132"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb132-1"><a href="pemodelan.html#cb132-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb132-2"><a href="pemodelan.html#cb132-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>),</span>
+<span id="cb132-3"><a href="pemodelan.html#cb132-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(covArima<span class="sc">$</span>aic,intvmod<span class="sc">$</span>aic)),</span>
+<span id="cb132-4"><a href="pemodelan.html#cb132-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names=</span><span class="fu">c</span>(<span class="st">&quot;Model&quot;</span>,<span class="st">&quot;AIC&quot;</span>)</span>
+<span id="cb132-5"><a href="pemodelan.html#cb132-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Model</th>
+<th align="left">AIC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="left">748.606798472797</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="left">735.979604802578</td>
+</tr>
+</tbody>
+</table>
+<p>Begitu juga akurasinya:</p>
+<div class="sourceCode" id="cb133"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb133-1"><a href="pemodelan.html#cb133-1" aria-hidden="true" tabindex="-1"></a>compAcc<span class="ot">&lt;-</span><span class="fu">rbind</span>(<span class="fu">accuracy</span>(covArima),<span class="fu">accuracy</span>(intvmod))</span>
+<span id="cb133-2"><a href="pemodelan.html#cb133-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(compAcc)<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>)</span>
+<span id="cb133-3"><a href="pemodelan.html#cb133-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb133-4"><a href="pemodelan.html#cb133-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb133-5"><a href="pemodelan.html#cb133-5" aria-hidden="true" tabindex="-1"></a>        compAcc,</span>
+<span id="cb133-6"><a href="pemodelan.html#cb133-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names=</span>T,</span>
+<span id="cb133-7"><a href="pemodelan.html#cb133-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span><span class="dv">4</span></span>
+<span id="cb133-8"><a href="pemodelan.html#cb133-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">ME</th>
+<th align="right">RMSE</th>
+<th align="right">MAE</th>
+<th align="right">MPE</th>
+<th align="right">MAPE</th>
+<th align="right">MASE</th>
+<th align="right">ACF1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="right">-0.0744</td>
+<td align="right">2.2868</td>
+<td align="right">1.7466</td>
+<td align="right">-0.2395</td>
+<td align="right">3.1249</td>
+<td align="right">0.9709</td>
+<td align="right">0.0328</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="right">-0.0054</td>
+<td align="right">2.1886</td>
+<td align="right">1.6826</td>
+<td align="right">-0.0829</td>
+<td align="right">2.9732</td>
+<td align="right">0.9354</td>
+<td align="right">0.0287</td>
+</tr>
+</tbody>
+</table>
+<p>Diagnostik residual juga oke:</p>
+<div class="sourceCode" id="cb134"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb134-1"><a href="pemodelan.html#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(intvmod)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-224-1.png" width="672" /></p>
+<pre><code>## 
+##  Ljung-Box test
+## 
+## data:  Residuals from ARIMA(1,1,1)
+## Q* = 5.8303, df = 6, p-value = 0.4425
+## 
+## Model df: 4.   Total lags used: 10</code></pre>
+<p>Nampaknya di term intervensi <span class="math inline">\(AR(1)\)</span> merupakan model terbaik:</p>
+<div class="sourceCode" id="cb136"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb136-1"><a href="pemodelan.html#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">arimax</span>(wcrude.train<span class="sc">$</span>Close, <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),</span>
+<span id="cb136-2"><a href="pemodelan.html#cb136-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb136-3"><a href="pemodelan.html#cb136-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>)))</span></code></pre></div>
+<pre><code>## 
+## Call:
+## arimax(x = wcrude.train$Close, order = c(1, 1, 1), xtransf = data.frame(COVID = 1 * 
+##     (seq(nrow(wcrude.train)) == 165)), transfer = list(c(0, 0)))
+## 
+## Coefficients:
+##           ar1     ma1  COVID-MA0
+##       -0.4994  0.6033    -2.5717
+## s.e.   0.5154  0.4752     1.5625
+## 
+## sigma^2 estimated as 5.273:  log likelihood = -371.3,  aic = 748.6</code></pre>
+<p>AIC model intervensi <span class="math inline">\(MA(0)\)</span> lebih tinggi. Model intervensi lain tidak dapat diduga dengan informasi yang ada:</p>
+<div class="sourceCode" id="cb138"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb138-1"><a href="pemodelan.html#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="fu">arimax</span>(wcrude.train<span class="sc">$</span>Close, <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),</span>
+<span id="cb138-2"><a href="pemodelan.html#cb138-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb138-3"><a href="pemodelan.html#cb138-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)))</span></code></pre></div>
+<pre><code>## Error in optim(init[mask], armaCSS, method = &quot;BFGS&quot;, hessian = FALSE, : initial value in &#39;vmmin&#39; is not finite</code></pre>
+<div class="sourceCode" id="cb140"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb140-1"><a href="pemodelan.html#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="fu">arimax</span>(wcrude.train<span class="sc">$</span>Close, <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),</span>
+<span id="cb140-2"><a href="pemodelan.html#cb140-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb140-3"><a href="pemodelan.html#cb140-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)))</span></code></pre></div>
+<pre><code>## Error in optim(init[mask], armaCSS, method = &quot;BFGS&quot;, hessian = FALSE, : initial value in &#39;vmmin&#39; is not finite</code></pre>
+<p>Forecasting model intervensi ini cukup kompleks. Dapat digunakan fungsi filter di R untuk menduga efek dari intervensi tersebut:</p>
+<div class="sourceCode" id="cb142"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb142-1"><a href="pemodelan.html#cb142-1" aria-hidden="true" tabindex="-1"></a>m.earlyCOV<span class="ot">&lt;-</span>stats<span class="sc">::</span><span class="fu">filter</span>(<span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train)<span class="sc">+</span><span class="dv">5</span>)<span class="sc">==</span><span class="dv">165</span>),</span>
+<span id="cb142-2"><a href="pemodelan.html#cb142-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">filter=</span><span class="fl">1.5199</span>, <span class="st">&quot;recursive&quot;</span>)<span class="sc">*</span> <span class="sc">-</span><span class="fl">7.914</span></span></code></pre></div>
+<p>Ini dapat diverifikasi dengan manual:</p>
+<p><span class="math display">\[
+\begin{aligned}
+m_r&amp;=-7.9141\\
+m_{r+1}&amp;=\phi_1\theta_0=1.5199\cdot -7.9141=-12.02864059\\
+m_{r+2}&amp;=\phi_1^2\theta_0=1.5199^{2}\cdot7.9141=-18.28233083\\
+m_{r+3}&amp;=\phi_1^3\theta_0=1.5199^{3}\cdot7.9141=-27.78731\\
+\end{aligned}
+\]</span></p>
+<p>Lalu, hasil dari filter akan dimasukkan sebagai regressor di fungsi Arima yang dimiliki package forecast</p>
+<div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="pemodelan.html#cb143-1" aria-hidden="true" tabindex="-1"></a>intv.mod<span class="ot">&lt;-</span><span class="fu">Arima</span>(wcrude.train<span class="sc">$</span>Close, <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),</span>
+<span id="cb143-2"><a href="pemodelan.html#cb143-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">xreg=</span>m.earlyCOV[<span class="dv">1</span><span class="sc">:</span><span class="dv">166</span>])</span>
+<span id="cb143-3"><a href="pemodelan.html#cb143-3" aria-hidden="true" tabindex="-1"></a>intv.mod</span></code></pre></div>
+<pre><code>## Series: wcrude.train$Close 
+## Regression with ARIMA(1,1,1) errors 
+## 
+## Coefficients:
+##           ar1     ma1    xreg
+##       -0.8992  0.9626  1.0000
+## s.e.   0.0592  0.0385  0.2538
+## 
+## sigma^2 = 4.908:  log likelihood = -363.99
+## AIC=735.98   AICc=736.23   BIC=748.4</code></pre>
+<p>Terlihat bahwa koefisien COVID sama dengan satu, sehingga sebenarnya akan diregresikan nilai-nilai <span class="math inline">\(m_{t}\)</span> yang telah ditemukan saja. Lakukan pendugaan:</p>
+<div class="sourceCode" id="cb145"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb145-1"><a href="pemodelan.html#cb145-1" aria-hidden="true" tabindex="-1"></a>forcinv<span class="ot">&lt;-</span><span class="fu">forecast</span>(intv.mod,<span class="dv">5</span>,<span class="at">xreg=</span>m.earlyCOV[<span class="dv">167</span><span class="sc">:</span><span class="dv">171</span>])</span></code></pre></div>
+<p>Dan plot. Awalnya, duga sebanyak 2 periode saja:</p>
+<div class="sourceCode" id="cb146"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb146-1"><a href="pemodelan.html#cb146-1" aria-hidden="true" tabindex="-1"></a>wcrude.covid[,<span class="st">`</span><span class="at">:=</span><span class="st">`</span>(<span class="st">&quot;fitted.intv&quot;</span><span class="ot">=</span><span class="fu">c</span>(forcinv<span class="sc">$</span>fitted,<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">5</span>)),  </span>
+<span id="cb146-2"><a href="pemodelan.html#cb146-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;predicted.intv&quot;</span><span class="ot">=</span><span class="fu">c</span>(<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">166</span>),forcinv<span class="sc">$</span>mean))]</span>
+<span id="cb146-3"><a href="pemodelan.html#cb146-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb146-4"><a href="pemodelan.html#cb146-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.covid[<span class="dv">150</span><span class="sc">:</span><span class="dv">168</span>])<span class="sc">+</span></span>
+<span id="cb146-5"><a href="pemodelan.html#cb146-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span></span>
+<span id="cb146-6"><a href="pemodelan.html#cb146-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>fitted.intv,<span class="at">color=</span><span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb146-7"><a href="pemodelan.html#cb146-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>))<span class="sc">+</span></span>
+<span id="cb146-8"><a href="pemodelan.html#cb146-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>),<span class="at">size=</span><span class="dv">3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>)<span class="sc">+</span></span>
+<span id="cb146-9"><a href="pemodelan.html#cb146-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">name=</span><span class="st">&#39;Prediksi ARIMA&#39;</span>,</span>
+<span id="cb146-10"><a href="pemodelan.html#cb146-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span>, <span class="st">&#39;Prediksi&#39;</span>),</span>
+<span id="cb146-11"><a href="pemodelan.html#cb146-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">values=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span><span class="ot">=</span><span class="st">&#39;black&#39;</span>, <span class="st">&#39;Prediksi&#39;</span><span class="ot">=</span><span class="st">&#39;#DB0000&#39;</span>))<span class="sc">+</span></span>
+<span id="cb146-12"><a href="pemodelan.html#cb146-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<pre><code>## Warning: Removed 2 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 17 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 17 rows containing missing values (geom_point).</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-230-1.png" width="672" /></p>
+<p>Namun, model ini tidak cocok untuk peramalan jangka panjang. Jika dilakukan peramalan dengan durasi sebulan (4 minggu), dugaan akan sangat jauh dari aktual. Fakta ini dapat dilihat dari plot:</p>
+<div class="sourceCode" id="cb150"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb150-1"><a href="pemodelan.html#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.covid[<span class="dv">150</span><span class="sc">:</span><span class="dv">170</span>])<span class="sc">+</span></span>
+<span id="cb150-2"><a href="pemodelan.html#cb150-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span></span>
+<span id="cb150-3"><a href="pemodelan.html#cb150-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>fitted.intv,<span class="at">color=</span><span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb150-4"><a href="pemodelan.html#cb150-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>))<span class="sc">+</span></span>
+<span id="cb150-5"><a href="pemodelan.html#cb150-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>),<span class="at">size=</span><span class="dv">3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>)<span class="sc">+</span></span>
+<span id="cb150-6"><a href="pemodelan.html#cb150-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">name=</span><span class="st">&#39;Prediksi ARIMA&#39;</span>,</span>
+<span id="cb150-7"><a href="pemodelan.html#cb150-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span>, <span class="st">&#39;Prediksi&#39;</span>),</span>
+<span id="cb150-8"><a href="pemodelan.html#cb150-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">values=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span><span class="ot">=</span><span class="st">&#39;black&#39;</span>, <span class="st">&#39;Prediksi&#39;</span><span class="ot">=</span><span class="st">&#39;#DB0000&#39;</span>))<span class="sc">+</span></span>
+<span id="cb150-9"><a href="pemodelan.html#cb150-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<pre><code>## Warning: Removed 4 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 17 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 17 rows containing missing values (geom_point).</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-231-1.png" width="672" />
+Ini terjadi karena kita tidak mengetahui cerita dari intervensi tersebut secara sepenuhnya. Terakhir, bandingkan error testing, pertama untuk prediksi dua periode ke depan:</p>
+<div class="sourceCode" id="cb154"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb154-1"><a href="pemodelan.html#cb154-1" aria-hidden="true" tabindex="-1"></a>compAcc<span class="ot">&lt;-</span><span class="fu">rbind</span>(<span class="fu">accuracy</span>(wcrude.covid<span class="sc">$</span>Close[<span class="dv">1</span><span class="sc">:</span><span class="dv">168</span>],</span>
+<span id="cb154-2"><a href="pemodelan.html#cb154-2" aria-hidden="true" tabindex="-1"></a>                        wcrude.covid<span class="sc">$</span>predicted.def[<span class="dv">1</span><span class="sc">:</span><span class="dv">168</span>]),</span>
+<span id="cb154-3"><a href="pemodelan.html#cb154-3" aria-hidden="true" tabindex="-1"></a>               <span class="fu">accuracy</span>(wcrude.covid<span class="sc">$</span>Close[<span class="dv">1</span><span class="sc">:</span><span class="dv">168</span>],</span>
+<span id="cb154-4"><a href="pemodelan.html#cb154-4" aria-hidden="true" tabindex="-1"></a>                        wcrude.covid<span class="sc">$</span>predicted.intv[<span class="dv">1</span><span class="sc">:</span><span class="dv">168</span>]))</span>
+<span id="cb154-5"><a href="pemodelan.html#cb154-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(compAcc)<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>)</span>
+<span id="cb154-6"><a href="pemodelan.html#cb154-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb154-7"><a href="pemodelan.html#cb154-7" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb154-8"><a href="pemodelan.html#cb154-8" aria-hidden="true" tabindex="-1"></a>        compAcc,</span>
+<span id="cb154-9"><a href="pemodelan.html#cb154-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names=</span>T,</span>
+<span id="cb154-10"><a href="pemodelan.html#cb154-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span><span class="dv">4</span></span>
+<span id="cb154-11"><a href="pemodelan.html#cb154-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">ME</th>
+<th align="right">RMSE</th>
+<th align="right">MAE</th>
+<th align="right">MPE</th>
+<th align="right">MAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="right">13.9157</td>
+<td align="right">14.7441</td>
+<td align="right">13.9157</td>
+<td align="right">33.8807</td>
+<td align="right">33.8807</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="right">2.8801</td>
+<td align="right">2.8843</td>
+<td align="right">2.8801</td>
+<td align="right">9.9138</td>
+<td align="right">9.9138</td>
+</tr>
+</tbody>
+</table>
+<p>Dan untuk lima periode ke depan:</p>
+<div class="sourceCode" id="cb155"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb155-1"><a href="pemodelan.html#cb155-1" aria-hidden="true" tabindex="-1"></a>compAcc<span class="ot">&lt;-</span><span class="fu">rbind</span>(<span class="fu">accuracy</span>(wcrude.covid<span class="sc">$</span>Close,</span>
+<span id="cb155-2"><a href="pemodelan.html#cb155-2" aria-hidden="true" tabindex="-1"></a>                        wcrude.covid<span class="sc">$</span>predicted.def),</span>
+<span id="cb155-3"><a href="pemodelan.html#cb155-3" aria-hidden="true" tabindex="-1"></a>               <span class="fu">accuracy</span>(wcrude.covid<span class="sc">$</span>Close,</span>
+<span id="cb155-4"><a href="pemodelan.html#cb155-4" aria-hidden="true" tabindex="-1"></a>                        wcrude.covid<span class="sc">$</span>predicted.intv))</span>
+<span id="cb155-5"><a href="pemodelan.html#cb155-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(compAcc)<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>)</span>
+<span id="cb155-6"><a href="pemodelan.html#cb155-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb155-7"><a href="pemodelan.html#cb155-7" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb155-8"><a href="pemodelan.html#cb155-8" aria-hidden="true" tabindex="-1"></a>        compAcc,</span>
+<span id="cb155-9"><a href="pemodelan.html#cb155-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names=</span>T,</span>
+<span id="cb155-10"><a href="pemodelan.html#cb155-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span><span class="dv">4</span></span>
+<span id="cb155-11"><a href="pemodelan.html#cb155-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">ME</th>
+<th align="right">RMSE</th>
+<th align="right">MAE</th>
+<th align="right">MPE</th>
+<th align="right">MAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="right">15.6177</td>
+<td align="right">16.1276</td>
+<td align="right">15.6177</td>
+<td align="right">38.1101</td>
+<td align="right">38.1101</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="right">-22.4012</td>
+<td align="right">35.3207</td>
+<td align="right">24.7053</td>
+<td align="right">84.9935</td>
+<td align="right">126.4934</td>
+</tr>
+</tbody>
+</table>
+<p>Jelas bahwa secara jangka pendek (dua minggu), model dengan intervensi lebih baik daripada model tanpa intervensi.</p>
+</div>
+<div id="covid-rebuilding" class="section level3 hasAnchor" number="4.1.2">
+<h3><span class="header-section-number">4.1.2</span> COVID rebuilding<a href="pemodelan.html#covid-rebuilding" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Analisis intervensi juga berguna untuk pemodelan data setelah efek intervensi habis, misal saat harga minyak naik kembali setelah COVID. Ambil data sampai akhir 2020:</p>
+<div class="sourceCode" id="cb156"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb156-1"><a href="pemodelan.html#cb156-1" aria-hidden="true" tabindex="-1"></a>wcrude.rebuild1<span class="ot">&lt;-</span><span class="fu">subset</span>(weeklyCrude,Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-12-31&quot;</span>))</span></code></pre></div>
+<p>Plot data tersebut:</p>
+<div class="sourceCode" id="cb157"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb157-1"><a href="pemodelan.html#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.rebuild1[<span class="dv">160</span><span class="sc">:</span><span class="dv">209</span>,])<span class="sc">+</span></span>
+<span id="cb157-2"><a href="pemodelan.html#cb157-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.6</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span><span class="fu">theme_minimal</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-235-1.png" width="672" /></p>
+<p>Ambil data sapai Juni 2020 sebagai data latih. Secara umum, rebuilding terjadi setelah harga sangat rendah di sekitar Mei 2020, sehingga saat Juni 2020 sudah terjadi sedikit kenaikan harga minyak:</p>
+<div class="sourceCode" id="cb158"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb158-1"><a href="pemodelan.html#cb158-1" aria-hidden="true" tabindex="-1"></a>wcrude.train2<span class="ot">&lt;-</span><span class="fu">subset</span>(weeklyCrude,Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-05-21&quot;</span>))</span></code></pre></div>
+<p>(Inset model step here) menunjukkan bahwa Arima(0,1,1) model terbaik:</p>
+<div class="sourceCode" id="cb159"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb159-1"><a href="pemodelan.html#cb159-1" aria-hidden="true" tabindex="-1"></a>diff2<span class="ot">&lt;-</span><span class="fu">diff</span>(wcrude.train2<span class="sc">$</span>Close,<span class="dv">1</span>)</span>
+<span id="cb159-2"><a href="pemodelan.html#cb159-2" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(diff2)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-237-1.png" width="672" /></p>
+<div class="sourceCode" id="cb160"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb160-1"><a href="pemodelan.html#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pacf</span>(diff2)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-237-2.png" width="672" /></p>
+<div class="sourceCode" id="cb161"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb161-1"><a href="pemodelan.html#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="fu">eacf</span>(diff2)</span></code></pre></div>
+<pre><code>## AR/MA
+##   0 1 2 3 4 5 6 7 8 9 10 11 12 13
+## 0 x o o o o o o o o o o  o  o  o 
+## 1 o o o o o o o o o o o  o  o  o 
+## 2 x o o o o o o o o o o  o  o  o 
+## 3 x x o o o o o o o o o  o  o  o 
+## 4 x o x x o o o o o o o  o  o  o 
+## 5 x x x x x o o o o o o  o  o  o 
+## 6 o o x x x o o o o o o  o  o  o 
+## 7 x o x x o x o o o o o  o  o  o</code></pre>
+<p>Intinya setelah dicoba <span class="math inline">\(ARIMA(0,1,1)\)</span> oke:</p>
+<div class="sourceCode" id="cb163"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb163-1"><a href="pemodelan.html#cb163-1" aria-hidden="true" tabindex="-1"></a>rebuildMod<span class="ot">&lt;-</span><span class="fu">Arima</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>))</span>
+<span id="cb163-2"><a href="pemodelan.html#cb163-2" aria-hidden="true" tabindex="-1"></a>rebuildMod</span></code></pre></div>
+<pre><code>## Series: wcrude.train2$Close 
+## ARIMA(0,1,1) 
+## 
+## Coefficients:
+##          ma1
+##       0.1961
+## s.e.  0.0746
+## 
+## sigma^2 = 6.799:  log likelihood = -415.55
+## AIC=835.11   AICc=835.18   BIC=841.44</code></pre>
+<p>Tren naik kembali tidak dapat diprediksi.</p>
+<div class="sourceCode" id="cb165"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb165-1"><a href="pemodelan.html#cb165-1" aria-hidden="true" tabindex="-1"></a>forcdef.reb<span class="ot">&lt;-</span><span class="fu">forecast</span>(rebuildMod,<span class="dv">33</span>)</span>
+<span id="cb165-2"><a href="pemodelan.html#cb165-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-3"><a href="pemodelan.html#cb165-3" aria-hidden="true" tabindex="-1"></a>wcrude.rebuild1[,<span class="st">`</span><span class="at">:=</span><span class="st">`</span>(<span class="st">&quot;fitted.def&quot;</span><span class="ot">=</span><span class="fu">c</span>(forcdef.reb<span class="sc">$</span>fitted,<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">33</span>)),  </span>
+<span id="cb165-4"><a href="pemodelan.html#cb165-4" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;predicted.def&quot;</span><span class="ot">=</span><span class="fu">c</span>(<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">176</span>),forcdef.reb<span class="sc">$</span>mean))]</span>
+<span id="cb165-5"><a href="pemodelan.html#cb165-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-6"><a href="pemodelan.html#cb165-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-7"><a href="pemodelan.html#cb165-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.rebuild1[<span class="dv">150</span><span class="sc">:</span><span class="dv">185</span>])<span class="sc">+</span></span>
+<span id="cb165-8"><a href="pemodelan.html#cb165-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span></span>
+<span id="cb165-9"><a href="pemodelan.html#cb165-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>fitted.def,<span class="at">color=</span><span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb165-10"><a href="pemodelan.html#cb165-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.def,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>))<span class="sc">+</span></span>
+<span id="cb165-11"><a href="pemodelan.html#cb165-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.def,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>), <span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span>.<span class="dv">3</span>)<span class="sc">+</span></span>
+<span id="cb165-12"><a href="pemodelan.html#cb165-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">name=</span><span class="st">&#39;Prediksi ARIMA&#39;</span>,</span>
+<span id="cb165-13"><a href="pemodelan.html#cb165-13" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span>, <span class="st">&#39;Prediksi&#39;</span>),</span>
+<span id="cb165-14"><a href="pemodelan.html#cb165-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">values=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span><span class="ot">=</span><span class="st">&#39;black&#39;</span>, <span class="st">&#39;Prediksi&#39;</span><span class="ot">=</span><span class="st">&#39;#DB0000&#39;</span>))<span class="sc">+</span></span>
+<span id="cb165-15"><a href="pemodelan.html#cb165-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<pre><code>## Warning: Removed 9 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 27 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 27 rows containing missing values (geom_point).</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-239-1.png" width="672" /></p>
+<p>Dapat dicoba berbagai spesifikasi model arimax. Pertama akan dicobakan spesifikasi arimax sebelumnya, yaitu AR saja. Koefisien MA lalu ditingkatkan sampai 3, lalu dicobakan cara <span class="citation">(<a href="#ref-cryer_time_2008" role="doc-biblioref">Cryer dan Chan 2008</a>)</span>, yaitu membuat dua peubah untuk memisahkan efek langsung dari COVID dan efek yang secara eksponen turun. Efek langsung dimodelkan dengan MA dan efek turun dimodelkan dengan AR.</p>
+<div class="sourceCode" id="cb169"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb169-1"><a href="pemodelan.html#cb169-1" aria-hidden="true" tabindex="-1"></a>arimaxdef<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb169-2"><a href="pemodelan.html#cb169-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb169-3"><a href="pemodelan.html#cb169-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb169-4"><a href="pemodelan.html#cb169-4" aria-hidden="true" tabindex="-1"></a>arimaxmad1<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb169-5"><a href="pemodelan.html#cb169-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb169-6"><a href="pemodelan.html#cb169-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)))</span>
+<span id="cb169-7"><a href="pemodelan.html#cb169-7" aria-hidden="true" tabindex="-1"></a>arimaxmad2<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb169-8"><a href="pemodelan.html#cb169-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb169-9"><a href="pemodelan.html#cb169-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)))</span>
+<span id="cb169-10"><a href="pemodelan.html#cb169-10" aria-hidden="true" tabindex="-1"></a>arimaxmad3<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb169-11"><a href="pemodelan.html#cb169-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb169-12"><a href="pemodelan.html#cb169-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>)))</span>
+<span id="cb169-13"><a href="pemodelan.html#cb169-13" aria-hidden="true" tabindex="-1"></a>arimaxd1<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb169-14"><a href="pemodelan.html#cb169-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>),</span>
+<span id="cb169-15"><a href="pemodelan.html#cb169-15" aria-hidden="true" tabindex="-1"></a>                          <span class="at">COVIDb=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb169-16"><a href="pemodelan.html#cb169-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>),<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb169-17"><a href="pemodelan.html#cb169-17" aria-hidden="true" tabindex="-1"></a>arimaxd2<span class="ot">&lt;-</span><span class="fu">arimax</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb169-18"><a href="pemodelan.html#cb169-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">xtransf=</span><span class="fu">data.frame</span>(<span class="at">COVID=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>),</span>
+<span id="cb169-19"><a href="pemodelan.html#cb169-19" aria-hidden="true" tabindex="-1"></a>                          <span class="at">COVIDb=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.train2))<span class="sc">==</span><span class="dv">165</span>)),</span>
+<span id="cb169-20"><a href="pemodelan.html#cb169-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">transfer=</span><span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">2</span>),<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span></code></pre></div>
+<p>Bandingkan AIC tiap spesifikasi model tersebut:</p>
+<div class="sourceCode" id="cb170"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb170-1"><a href="pemodelan.html#cb170-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb170-2"><a href="pemodelan.html#cb170-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(arimaxdef<span class="sc">$</span>aic,<span class="at">col.names=</span><span class="st">&quot;Intervensi AR(1)&quot;</span>),</span>
+<span id="cb170-3"><a href="pemodelan.html#cb170-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">cbind</span>(arimaxmad1<span class="sc">$</span>aic,arimaxmad2<span class="sc">$</span>aic,arimaxmad3<span class="sc">$</span>aic),</span>
+<span id="cb170-4"><a href="pemodelan.html#cb170-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">col.names=</span><span class="fu">c</span>(<span class="st">&quot;ARMA(1,1)&quot;</span>,<span class="st">&quot;ARMA(1,2)&quot;</span>,<span class="st">&quot;MA(1,3)&quot;</span>)),</span>
+<span id="cb170-5"><a href="pemodelan.html#cb170-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">cbind</span>(arimaxd1<span class="sc">$</span>aic,arimaxd2<span class="sc">$</span>aic),<span class="at">col.names=</span><span class="fu">c</span>(<span class="st">&quot;MA(1)+AR(1)&quot;</span>,<span class="st">&quot;MA(2)+AR(1)&quot;</span>))</span>
+<span id="cb170-6"><a href="pemodelan.html#cb170-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb170-7"><a href="pemodelan.html#cb170-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Intervensi AR(1)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">832.4362</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">ARMA(1,1)</th>
+<th align="right">ARMA(1,2)</th>
+<th align="right">MA(1,3)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">829.9415</td>
+<td align="right">827.1838</td>
+<td align="right">794.4952</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">MA(1)+AR(1)</th>
+<th align="right">MA(2)+AR(1)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">816.3303</td>
+<td align="right">798.1868</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Sehingga model terbaik adalah:</p>
+<div class="sourceCode" id="cb171"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb171-1"><a href="pemodelan.html#cb171-1" aria-hidden="true" tabindex="-1"></a>arimaxmad3</span></code></pre></div>
+<pre><code>## 
+## Call:
+## arimax(x = wcrude.train2$Close, order = c(1, 1, 0), xtransf = data.frame(COVID = 1 * 
+##     (seq(nrow(wcrude.train2)) == 165)), transfer = list(c(1, 3)))
+## 
+## Coefficients:
+##          ar1  COVID-AR1  COVID-MA0  COVID-MA1  COVID-MA2  COVID-MA3
+##       0.0857     0.9605    -8.4711    -4.4471   -10.6113   -10.6437
+## s.e.  0.0767     0.0243     2.3488     2.3693     2.3759     2.3828
+## 
+## sigma^2 estimated as 5.537:  log likelihood = -391.25,  aic = 794.5</code></pre>
+<p>Terlihat bahwa semua koefisien lebih besar dari galat baku, sehingga kemungkinan signifikan. Residual kedua model tampak oke:</p>
+<div class="sourceCode" id="cb173"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb173-1"><a href="pemodelan.html#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(rebuildMod)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-243-1.png" width="672" /></p>
+<pre><code>## 
+##  Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,1,1)
+## Q* = 5.6654, df = 9, p-value = 0.7729
+## 
+## Model df: 1.   Total lags used: 10</code></pre>
+<div class="sourceCode" id="cb175"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb175-1"><a href="pemodelan.html#cb175-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(arimaxmad3)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-243-2.png" width="672" /></p>
+<pre><code>## 
+##  Ljung-Box test
+## 
+## data:  Residuals from ARIMA(1,1,0)
+## Q* = 5.5843, df = 4, p-value = 0.2324
+## 
+## Model df: 6.   Total lags used: 10</code></pre>
+<p>Perhatikan spesifikasi model tersebut secara matematis:</p>
+<p><span class="math display">\[
+\begin{aligned}
+m_t&amp;=\frac{(\theta_0+\theta_1B+\theta_2B^2+\theta_3B^3)}{(1-\phi_1 B)} P_t\\
+(1-\phi_1B)m_t&amp;=\theta_0P_t+\theta_1P_{t-1}+\theta_2P_{t-2}+\theta_3P_{t-3}\\
+m_t-\phi_1m_{t-1}&amp;=\theta_0P_t+\theta_1P_{t-1}+\theta_2P_{t-2}+\theta_3P_{t-3}\\
+m_t&amp;=\theta_0P_t+\theta_1P_{t-1}+\theta_2P_{t-2}+\theta_3P_{t-3}+\phi_1m_{t-1}\\
+\end{aligned}
+\]</span></p>
+<p>Sama seperti sebelumnya, untuk forecasting nilai tersebut dapat dicari dengan fungsi filter:</p>
+<div class="sourceCode" id="cb177"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb177-1"><a href="pemodelan.html#cb177-1" aria-hidden="true" tabindex="-1"></a>COVID<span class="ot">=</span><span class="dv">1</span><span class="sc">*</span>(<span class="fu">seq</span>(<span class="fu">nrow</span>(wcrude.rebuild1))<span class="sc">==</span><span class="dv">165</span>)</span>
+<span id="cb177-2"><a href="pemodelan.html#cb177-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb177-3"><a href="pemodelan.html#cb177-3" aria-hidden="true" tabindex="-1"></a>tss<span class="ot">&lt;-</span>stats<span class="sc">::</span><span class="fu">filter</span>(COVID,<span class="fu">c</span>(<span class="sc">-</span><span class="fl">8.4711</span>,    <span class="sc">-</span><span class="fl">4.4471</span>,   <span class="sc">-</span><span class="fl">10.6113</span>,   <span class="sc">-</span><span class="fl">10.6437</span>),<span class="st">&quot;convolution&quot;</span>,<span class="at">sides=</span><span class="dv">1</span>)</span>
+<span id="cb177-4"><a href="pemodelan.html#cb177-4" aria-hidden="true" tabindex="-1"></a>tss[<span class="fu">is.na</span>(tss)]<span class="ot">&lt;-</span><span class="dv">0</span></span>
+<span id="cb177-5"><a href="pemodelan.html#cb177-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb177-6"><a href="pemodelan.html#cb177-6" aria-hidden="true" tabindex="-1"></a>m<span class="ot">&lt;-</span>stats<span class="sc">::</span><span class="fu">filter</span>(tss,<span class="fl">0.9605</span>,<span class="st">&quot;recursive&quot;</span>,<span class="at">sides=</span><span class="dv">1</span>)</span>
+<span id="cb177-7"><a href="pemodelan.html#cb177-7" aria-hidden="true" tabindex="-1"></a>m[<span class="dv">165</span><span class="sc">:</span><span class="dv">209</span>]</span></code></pre></div>
+<pre><code>##  [1]  -8.471100 -12.583592 -22.697840 -32.444975 -31.163399 -29.932444 -28.750113 -27.614483 -26.523711 -25.476025 -24.469722
+## [12] -23.503168 -22.574792 -21.683088 -20.826606 -20.003955 -19.213799 -18.454854 -17.725887 -17.025715 -16.353199 -15.707248
+## [23] -15.086811 -14.490882 -13.918492 -13.368712 -12.840648 -12.333442 -11.846271 -11.378344 -10.928899 -10.497207 -10.082568
+## [34]  -9.684306  -9.301776  -8.934356  -8.581449  -8.242482  -7.916904  -7.604186  -7.303821  -7.015320  -6.738215  -6.472055
+## [45]  -6.216409</code></pre>
+<p>Empat hasil hitungan pertama mirip dengan hitungan manual. Selanjutnya dapat dengan mudah diverifikasi dengan mengalikan dengan pangkat dari <span class="math inline">\(\phi_1\)</span>.</p>
+<p><span class="math display">\[
+\begin{aligned}
+m_{r}&amp;=\theta_0&amp;&amp;=-8.4711    \\
+m_{r+1}&amp;=\theta_1+\phi_1\theta_0&amp;=-4.4471+0.9605    \cdot -8.4711&amp;=−12.5835\\
+m_{r+2}&amp;=\theta_2+\phi_1m_{r+1}=\theta_2+\phi_1\theta_1+\phi_1^2\theta_0&amp;=-10.6113+0.9605\cdot−12.5835&amp;=−22.69775175\\
+m_{r+3}&amp;=\theta_3+\phi_1m_{r+2}=\theta_3+\phi_1\theta_2+\phi_1^2\theta_1+\phi_1^3\theta_0&amp;=-10.6437+0.9605\cdot−22.69775175&amp;=−32.44489057\\
+m_{r+k}&amp;=\phi_1^{k-3}m_{r+k-1}=\phi_1^{k-3}\theta_3+\phi_1^{k-2}\theta_2+\phi_1^{k-1}\theta_1+\phi_1^k\theta_0\\
+\end{aligned}
+\]</span></p>
+<div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb179-1"><a href="pemodelan.html#cb179-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9605</span><span class="sc">^</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>))<span class="sc">*-</span><span class="fl">32.44489057</span></span></code></pre></div>
+<pre><code>##  [1] -31.16332 -29.93237 -28.75004 -27.61441 -26.52364 -25.47596 -24.46966 -23.50311 -22.57473 -21.68303 -20.82655 -20.00390
+## [13] -19.21375 -18.45481 -17.72584 -17.02567 -16.35316 -15.70721 -15.08677 -14.49084</code></pre>
+<p>Gunakan fungsi Arima lalu prediksi:</p>
+<div class="sourceCode" id="cb181"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb181-1"><a href="pemodelan.html#cb181-1" aria-hidden="true" tabindex="-1"></a>rebuildModfin<span class="ot">&lt;-</span><span class="fu">Arima</span>(wcrude.train2<span class="sc">$</span>Close,<span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb181-2"><a href="pemodelan.html#cb181-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">xreg=</span>m[<span class="dv">1</span><span class="sc">:</span><span class="dv">176</span>])</span>
+<span id="cb181-3"><a href="pemodelan.html#cb181-3" aria-hidden="true" tabindex="-1"></a>rebuildModfin</span></code></pre></div>
+<pre><code>## Series: wcrude.train2$Close 
+## Regression with ARIMA(1,1,0) errors 
+## 
+## Coefficients:
+##          ar1    xreg
+##       0.0850  0.9505
+## s.e.  0.0758  0.1424
+## 
+## sigma^2 = 5.519:  log likelihood = -396.78
+## AIC=799.57   AICc=799.71   BIC=809.06</code></pre>
+<div class="sourceCode" id="cb183"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb183-1"><a href="pemodelan.html#cb183-1" aria-hidden="true" tabindex="-1"></a>forc.inv.reb<span class="ot">&lt;-</span><span class="fu">forecast</span>(rebuildModfin,<span class="dv">33</span>,<span class="at">xreg=</span>m[<span class="dv">177</span><span class="sc">:</span><span class="dv">209</span>])</span></code></pre></div>
+<p>Dalam periode sama, dapat dilihat bahwa prediksi model ARIMAX lebih baik:</p>
+<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb184-1"><a href="pemodelan.html#cb184-1" aria-hidden="true" tabindex="-1"></a>wcrude.rebuild1[,<span class="st">`</span><span class="at">:=</span><span class="st">`</span>(<span class="st">&quot;fitted.intv&quot;</span><span class="ot">=</span><span class="fu">c</span>(forc.inv.reb<span class="sc">$</span>fitted,<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">33</span>)),  </span>
+<span id="cb184-2"><a href="pemodelan.html#cb184-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;predicted.intv&quot;</span><span class="ot">=</span><span class="fu">c</span>(<span class="fu">rep</span>(<span class="cn">NA</span>,<span class="dv">176</span>),forc.inv.reb<span class="sc">$</span>mean))]</span>
+<span id="cb184-3"><a href="pemodelan.html#cb184-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb184-4"><a href="pemodelan.html#cb184-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb184-5"><a href="pemodelan.html#cb184-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.rebuild1[<span class="dv">150</span><span class="sc">:</span><span class="dv">185</span>])<span class="sc">+</span></span>
+<span id="cb184-6"><a href="pemodelan.html#cb184-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span></span>
+<span id="cb184-7"><a href="pemodelan.html#cb184-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>fitted.intv,<span class="at">color=</span><span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb184-8"><a href="pemodelan.html#cb184-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>))<span class="sc">+</span></span>
+<span id="cb184-9"><a href="pemodelan.html#cb184-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>),<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>)<span class="sc">+</span></span>
+<span id="cb184-10"><a href="pemodelan.html#cb184-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">name=</span><span class="st">&#39;Prediksi ARIMA&#39;</span>,</span>
+<span id="cb184-11"><a href="pemodelan.html#cb184-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span>, <span class="st">&#39;Prediksi&#39;</span>),</span>
+<span id="cb184-12"><a href="pemodelan.html#cb184-12" aria-hidden="true" tabindex="-1"></a>                     <span class="at">values=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span><span class="ot">=</span><span class="st">&#39;black&#39;</span>, <span class="st">&#39;Prediksi&#39;</span><span class="ot">=</span><span class="st">&#39;#DB0000&#39;</span>))<span class="sc">+</span></span>
+<span id="cb184-13"><a href="pemodelan.html#cb184-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<pre><code>## Warning: Removed 9 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 27 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 27 rows containing missing values (geom_point).</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-247-1.png" width="672" /></p>
+<p>Bahkan, jika diekspansi sampai akhir 2020, prediksi masih baik.</p>
+<div class="sourceCode" id="cb188"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb188-1"><a href="pemodelan.html#cb188-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date,<span class="at">y=</span>Close),<span class="at">data=</span>wcrude.rebuild1[<span class="dv">150</span><span class="sc">:</span><span class="dv">209</span> ])<span class="sc">+</span></span>
+<span id="cb188-2"><a href="pemodelan.html#cb188-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>, <span class="at">color=</span><span class="st">&quot;gray&quot;</span>)<span class="sc">+</span></span>
+<span id="cb188-3"><a href="pemodelan.html#cb188-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>fitted.intv,<span class="at">color=</span><span class="st">&quot;Fitted&quot;</span>))<span class="sc">+</span></span>
+<span id="cb188-4"><a href="pemodelan.html#cb188-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>))<span class="sc">+</span></span>
+<span id="cb188-5"><a href="pemodelan.html#cb188-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y=</span>predicted.intv,<span class="at">color=</span><span class="st">&quot;Prediksi&quot;</span>),<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.3</span>)<span class="sc">+</span></span>
+<span id="cb188-6"><a href="pemodelan.html#cb188-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">name=</span><span class="st">&#39;Prediksi ARIMA&#39;</span>,</span>
+<span id="cb188-7"><a href="pemodelan.html#cb188-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span>, <span class="st">&#39;Prediksi&#39;</span>),</span>
+<span id="cb188-8"><a href="pemodelan.html#cb188-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">values=</span><span class="fu">c</span>(<span class="st">&#39;Fitted&#39;</span><span class="ot">=</span><span class="st">&#39;black&#39;</span>, <span class="st">&#39;Prediksi&#39;</span><span class="ot">=</span><span class="st">&#39;#DB0000&#39;</span>))<span class="sc">+</span></span>
+<span id="cb188-9"><a href="pemodelan.html#cb188-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<pre><code>## Warning: Removed 33 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 27 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 27 rows containing missing values (geom_point).</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-248-1.png" width="672" /></p>
+<p>Dapat dibandingkan akurasi di training, peramalan 9 periode, dan peramalan 33 periode:</p>
+<div class="sourceCode" id="cb192"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb192-1"><a href="pemodelan.html#cb192-1" aria-hidden="true" tabindex="-1"></a>compAcc<span class="ot">&lt;-</span><span class="fu">rbind</span>(<span class="fu">accuracy</span>(rebuildMod),<span class="fu">accuracy</span>(arimaxmad3))</span>
+<span id="cb192-2"><a href="pemodelan.html#cb192-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(compAcc)<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>)</span>
+<span id="cb192-3"><a href="pemodelan.html#cb192-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb192-4"><a href="pemodelan.html#cb192-4" aria-hidden="true" tabindex="-1"></a>compAcc<span class="fl">.1</span><span class="ot">&lt;-</span><span class="fu">rbind</span>(<span class="fu">accuracy</span>(wcrude.rebuild1<span class="sc">$</span>Close[<span class="dv">1</span><span class="sc">:</span><span class="dv">185</span>],</span>
+<span id="cb192-5"><a href="pemodelan.html#cb192-5" aria-hidden="true" tabindex="-1"></a>                          wcrude.rebuild1<span class="sc">$</span>predicted.def[<span class="dv">1</span><span class="sc">:</span><span class="dv">185</span>]),</span>
+<span id="cb192-6"><a href="pemodelan.html#cb192-6" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">accuracy</span>(wcrude.rebuild1<span class="sc">$</span>Close[<span class="dv">1</span><span class="sc">:</span><span class="dv">185</span>],</span>
+<span id="cb192-7"><a href="pemodelan.html#cb192-7" aria-hidden="true" tabindex="-1"></a>                          wcrude.rebuild1<span class="sc">$</span>predicted.intv[<span class="dv">1</span><span class="sc">:</span><span class="dv">185</span>]))</span>
+<span id="cb192-8"><a href="pemodelan.html#cb192-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(compAcc<span class="fl">.1</span>)<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>)</span>
+<span id="cb192-9"><a href="pemodelan.html#cb192-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb192-10"><a href="pemodelan.html#cb192-10" aria-hidden="true" tabindex="-1"></a>compAcc<span class="fl">.2</span><span class="ot">&lt;-</span><span class="fu">rbind</span>(<span class="fu">accuracy</span>(wcrude.rebuild1<span class="sc">$</span>Close[<span class="dv">1</span><span class="sc">:</span><span class="dv">209</span>],</span>
+<span id="cb192-11"><a href="pemodelan.html#cb192-11" aria-hidden="true" tabindex="-1"></a>                          wcrude.rebuild1<span class="sc">$</span>predicted.def[<span class="dv">1</span><span class="sc">:</span><span class="dv">209</span>]),</span>
+<span id="cb192-12"><a href="pemodelan.html#cb192-12" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">accuracy</span>(wcrude.rebuild1<span class="sc">$</span>Close[<span class="dv">1</span><span class="sc">:</span><span class="dv">209</span>],</span>
+<span id="cb192-13"><a href="pemodelan.html#cb192-13" aria-hidden="true" tabindex="-1"></a>                          wcrude.rebuild1<span class="sc">$</span>predicted.intv[<span class="dv">1</span><span class="sc">:</span><span class="dv">209</span>]))</span>
+<span id="cb192-14"><a href="pemodelan.html#cb192-14" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(compAcc<span class="fl">.2</span>)<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;Tanpa Intervensi&quot;</span>,<span class="st">&quot;Intervensi&quot;</span>)</span>
+<span id="cb192-15"><a href="pemodelan.html#cb192-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb192-16"><a href="pemodelan.html#cb192-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb192-17"><a href="pemodelan.html#cb192-17" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(knitr<span class="sc">::</span><span class="fu">kable</span>(compAcc,</span>
+<span id="cb192-18"><a href="pemodelan.html#cb192-18" aria-hidden="true" tabindex="-1"></a>                                <span class="at">row.names=</span>T,</span>
+<span id="cb192-19"><a href="pemodelan.html#cb192-19" aria-hidden="true" tabindex="-1"></a>                                <span class="at">digits =</span><span class="dv">4</span>),</span>
+<span id="cb192-20"><a href="pemodelan.html#cb192-20" aria-hidden="true" tabindex="-1"></a>                   knitr<span class="sc">::</span><span class="fu">kable</span>(compAcc<span class="fl">.1</span>,</span>
+<span id="cb192-21"><a href="pemodelan.html#cb192-21" aria-hidden="true" tabindex="-1"></a>                                <span class="at">row.names=</span>T,</span>
+<span id="cb192-22"><a href="pemodelan.html#cb192-22" aria-hidden="true" tabindex="-1"></a>                                <span class="at">digits =</span><span class="dv">4</span>),</span>
+<span id="cb192-23"><a href="pemodelan.html#cb192-23" aria-hidden="true" tabindex="-1"></a>                   knitr<span class="sc">::</span><span class="fu">kable</span>(compAcc<span class="fl">.2</span>,</span>
+<span id="cb192-24"><a href="pemodelan.html#cb192-24" aria-hidden="true" tabindex="-1"></a>                                <span class="at">row.names=</span>T,</span>
+<span id="cb192-25"><a href="pemodelan.html#cb192-25" aria-hidden="true" tabindex="-1"></a>                                <span class="at">digits =</span><span class="dv">4</span>)),</span>
+<span id="cb192-26"><a href="pemodelan.html#cb192-26" aria-hidden="true" tabindex="-1"></a>              )</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">ME</th>
+<th align="right">RMSE</th>
+<th align="right">MAE</th>
+<th align="right">MPE</th>
+<th align="right">MAPE</th>
+<th align="right">MASE</th>
+<th align="right">ACF1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="right">-0.1127</td>
+<td align="right">2.5927</td>
+<td align="right">1.9500</td>
+<td align="right">-0.4368</td>
+<td align="right">4.0818</td>
+<td align="right">0.9826</td>
+<td align="right">-0.0009</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="right">0.0008</td>
+<td align="right">2.3463</td>
+<td align="right">1.8217</td>
+<td align="right">-0.1753</td>
+<td align="right">3.7110</td>
+<td align="right">0.9179</td>
+<td align="right">0.0016</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">ME</th>
+<th align="right">RMSE</th>
+<th align="right">MAE</th>
+<th align="right">MPE</th>
+<th align="right">MAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="right">-8.1052</td>
+<td align="right">8.4875</td>
+<td align="right">8.1052</td>
+<td align="right">-26.8550</td>
+<td align="right">26.8550</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="right">-4.5318</td>
+<td align="right">4.7281</td>
+<td align="right">4.5318</td>
+<td align="right">-13.4257</td>
+<td align="right">13.4257</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">ME</th>
+<th align="right">RMSE</th>
+<th align="right">MAE</th>
+<th align="right">MPE</th>
+<th align="right">MAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tanpa Intervensi</td>
+<td align="right">-10.7561</td>
+<td align="right">11.3870</td>
+<td align="right">10.7561</td>
+<td align="right">-35.6383</td>
+<td align="right">35.6383</td>
+</tr>
+<tr class="even">
+<td align="left">Intervensi</td>
+<td align="right">-0.9257</td>
+<td align="right">3.8008</td>
+<td align="right">3.3252</td>
+<td align="right">-3.0531</td>
+<td align="right">8.6213</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Model dengan intervensi umumnya lebih baik.</p>
+
+</div>
+</div>
+</div>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-cryer_time_2008" class="csl-entry">
+Cryer JD, Chan KS. 2008. <em>Time <span>Series</span> <span>Analysis</span>: <span>With</span> <span>Applications</span> in <span>R</span></em>. Springer New York. (Springer <span>Texts</span> in <span>Statistics</span>).
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="references.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/04-pemodelan.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

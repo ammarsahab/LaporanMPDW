@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Bab 2 Praproses dan Eksplorasi Data (2017-2022) | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</title>
+  <meta name="description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Bab 2 Praproses dan Eksplorasi Data (2017-2022) | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Bab 2 Praproses dan Eksplorasi Data (2017-2022) | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  
+  <meta name="twitter:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  
+
+<meta name="author" content="Adley Dityo Valentinus Putra (G14180009)" />
+<meta name="author" content="Muhammad Ammar Sahab (G14190020)" />
+<meta name="author" content="Putri Eka Perdanti (G14190027)" />
+<meta name="author" content="Farhan Narendra Achyara (G14190050)" />
+<meta name="author" content="Grashella Clara Nesa Br Ginting (G14190086)" />
+
+
+<meta name="date" content="2022-04-26" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="praproses-dan-eksplorasi-data.html"/>
+<link rel="next" href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+
+<li class="divider"></li>
+<li><a href="index.html#pendahuluan">Pendahuluan<span></span></a>
+<ul>
+<li><a href="index.html#struktur-penelitian">Struktur penelitian<span></span></a></li>
+<li><a href="index.html#ekstraksi-data">Ekstraksi data<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html"><i class="fa fa-check"></i><b>1</b> Praproses dan Eksplorasi Data<span></span></a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#interval-waktu-data"><i class="fa fa-check"></i><b>1.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="1.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas"><i class="fa fa-check"></i><b>1.2</b> Pola-pola data dan stasioneritas<span></span></a></li>
+<li class="chapter" data-level="1.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#latar-belakang"><i class="fa fa-check"></i><b>1.3</b> Latar Belakang<span></span></a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009"><i class="fa fa-check"></i><b>1.3.1</b> Harga Minyak Mentah Tahun 2009<span></span></a></li>
+<li class="chapter" data-level="1.3.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#arab-spring"><i class="fa fa-check"></i><b>1.3.2</b> Arab Spring<span></span></a></li>
+<li class="chapter" data-level="1.3.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#shale-revolution"><i class="fa fa-check"></i><b>1.3.3</b> Shale Revolution<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural"><i class="fa fa-check"></i><b>1.4</b> Titik-titik perubahan struktural<span></span></a></li>
+<li class="chapter" data-level="1.5" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#kestastioneran"><i class="fa fa-check"></i><b>1.5</b> Kestastioneran<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html"><i class="fa fa-check"></i><b>2</b> Praproses dan Eksplorasi Data (2017-2022)<span></span></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1"><i class="fa fa-check"></i><b>2.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data"><i class="fa fa-check"></i><b>2.2</b> Plot data<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1"><i class="fa fa-check"></i><b>2.3</b> Latar Belakang<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><i class="fa fa-check"></i><b>3</b> Optimisasi Parameter Pemulusan dengan Validasi Silang<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metode"><i class="fa fa-check"></i><b>3.1</b> Metode<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-deret-waktu"><i class="fa fa-check"></i><b>3.1.1</b> Validasi Silang Deret Waktu<span></span></a></li>
+<li class="chapter" data-level="3.1.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metrik"><i class="fa fa-check"></i><b>3.1.2</b> Metrik<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#single-moving-average"><i class="fa fa-check"></i><b>3.2</b> Single Moving Average<span></span></a></li>
+<li class="chapter" data-level="3.3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-untuk-sma"><i class="fa fa-check"></i><b>3.3</b> Validasi silang untuk SMA<span></span></a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan"><i class="fa fa-check"></i><b>3.3.1</b> Kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#dma"><i class="fa fa-check"></i><b>3.4</b> DMA<span></span></a></li>
+<li class="chapter" data-level="3.5" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#ses"><i class="fa fa-check"></i><b>3.5</b> SES<span></span></a></li>
+<li class="chapter" data-level="3.6" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#des"><i class="fa fa-check"></i><b>3.6</b> DES<span></span></a></li>
+<li class="chapter" data-level="3.7" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan-1"><i class="fa fa-check"></i><b>3.7</b> Kesimpulan<span></span></a></li>
+<li class="chapter" data-level="3.8" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#addendum-last-block"><i class="fa fa-check"></i><b>3.8</b> Addendum: Last Block<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html"><i class="fa fa-check"></i><b>4</b> Analisis Intervensi pada model ARIMA<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#awal-covid"><i class="fa fa-check"></i><b>4.1</b> Awal COVID<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima"><i class="fa fa-check"></i><b>4.1.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.1.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#analisis-intervensi"><i class="fa fa-check"></i><b>4.1.2</b> Analisis intervensi<span></span></a></li>
+<li class="chapter" data-level="4.1.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#perbandingan"><i class="fa fa-check"></i><b>4.1.3</b> Perbandingan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#covid-rebuilding"><i class="fa fa-check"></i><b>4.2</b> COVID rebuilding<span></span></a></li>
+<li class="chapter" data-level="4.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#masa-sekarang"><i class="fa fa-check"></i><b>4.3</b> Masa Sekarang<span></span></a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima-1"><i class="fa fa-check"></i><b>4.3.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.3.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arimax"><i class="fa fa-check"></i><b>4.3.2</b> ARIMAX<span></span></a></li>
+<li class="chapter" data-level="4.3.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#rev-penanganan-autokorelasi"><i class="fa fa-check"></i><b>4.3.3</b> Rev: Penanganan autokorelasi<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="praproses-dan-eksplorasi-data-2017-2022" class="section level1 hasAnchor" number="2">
+<h1><span class="header-section-number">Bab 2</span> Praproses dan Eksplorasi Data (2017-2022)<a href="praproses-dan-eksplorasi-data-2017-2022.html#praproses-dan-eksplorasi-data-2017-2022" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Bagian ini akan membahas beberapa hal:</p>
+<ol style="list-style-type: decimal">
+<li>Permasalahan interval waktu data</li>
+<li>Latar belakang fluktuasi harga minyak pada tahun 2017-2022</li>
+<li>Ekstraksi peubah <em>dummy</em> untuk memodelkan efek COVID-19</li>
+<li>Pola data time series dan kestasioneran</li>
+<li>Identifikasi model.</li>
+</ol>
+<div id="interval-waktu-data-1" class="section level2 hasAnchor" number="2.1">
+<h2><span class="header-section-number">2.1</span> Interval waktu data<a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Dari melihat 10 tanggal pertama yang dicatat di dataset harga minyak:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb36-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(crudenow,<span class="at">n=</span><span class="dv">10</span>),</span>
+<span id="cb36-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb36-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Tanggal&quot;</span>,<span class="st">&quot;Harga Penutupan&quot;</span>))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Tanggal</th>
+<th align="right">Harga Penutupan</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2017-01-03</td>
+<td align="right">52.33</td>
+</tr>
+<tr class="even">
+<td align="left">2017-01-04</td>
+<td align="right">53.26</td>
+</tr>
+<tr class="odd">
+<td align="left">2017-01-05</td>
+<td align="right">53.76</td>
+</tr>
+<tr class="even">
+<td align="left">2017-01-06</td>
+<td align="right">53.99</td>
+</tr>
+<tr class="odd">
+<td align="left">2017-01-09</td>
+<td align="right">51.96</td>
+</tr>
+<tr class="even">
+<td align="left">2017-01-10</td>
+<td align="right">50.82</td>
+</tr>
+<tr class="odd">
+<td align="left">2017-01-11</td>
+<td align="right">52.25</td>
+</tr>
+<tr class="even">
+<td align="left">2017-01-12</td>
+<td align="right">53.01</td>
+</tr>
+<tr class="odd">
+<td align="left">2017-01-13</td>
+<td align="right">52.37</td>
+</tr>
+<tr class="even">
+<td align="left">2017-01-17</td>
+<td align="right">52.48</td>
+</tr>
+</tbody>
+</table>
+<p>Terlihat bahwa rentang waktu pengamatan data tidak sama. Misal, tidak ada pengamatan saat 1 Januari 2009 karena ada libur tahun baru. Selain itu, ada lompatan dari 2 Januari 2009 ke 5 Januari 2009. Dalam kata lain, harga minyak tidak diamati pada tanggal 3 dan 4 Januari 2009, yang merupakan akhir minggu (hari Sabtu dan Minggu). Pola yang sama terulang di data deret waktu tersebut bagi akhir minggu dan hari libur lainnya - pasar ditutup sehingga harga minyak tidak ada.</p>
+<p>Situasi ini dapat ditangani dengan tiga cara umum:</p>
+<ol style="list-style-type: decimal">
+<li>Abaikan rentang waktu harian yang tidak sama. Gunakan <em>trading days</em> atau hari kerja sebagai rentang waktu.</li>
+<li>Isi data akhir minggu dan hari libur menggunakan suatu bentuk interpolasi.</li>
+<li>Agregasikan data menjadi data mingguan, bulanan, atau tahunan.</li>
+</ol>
+<p>Cara pertama sering dipakai dalam peramalan deret waktu. Walaupun tidak ada data hari libur dan akhir minggu, nilai harian reksadana saham CREF dari tahun 2004 sampai 2006 dimodelkan dengan menggangap data tersebut memiliki rentang waktu yang sama <span class="citation">(<a href="#ref-cryer_time_2008" role="doc-biblioref">Cryer dan Chan 2008</a>)</span>. Pemodelan harga emas harian dari tahun 1985 sampai 1989 juga hanya menggunakan <em>trading days</em>. Dilakukan interpolasi, tetapi hanya untuk data hilang di <em>trading days</em> <span class="citation">(<a href="#ref-fpp2" role="doc-biblioref">Hyndman dan Athanasopoulos 2018</a>)</span>. Peramalan harga minyak <span class="citation">(<a href="#ref-fouroil" role="doc-biblioref">Elshendy <em>et al.</em> 2018</a>)</span> juga menggunakan data selama 84 hari kerja saja.</p>
+<p>Namun, juga ada justifikasi untuk interpolasi data. Interpolasi data dilakukan saat observasi tersebut dianggap memiliki nilai suatu peubah, tetapi tidak dapat diobservasi. Misal, tidak perlu melakukan interpolasi peubah gaji untuk seorang anak karena dia tidak mungkin bekerja. Dalam kasus ini, harga minyak di hari libur mungkin saja memiliki nilai. Pasar saham dan sekuritas sering mengalami <em>after-hours trading</em>; saat hal tersebut terjadi, harga berubah <span class="citation">(<a href="#ref-barclay_price_2015" role="doc-biblioref">Barclay dan Hendershott 2015</a>)</span>. Walaupun begitu, bentuk proses tersebut harus diasumsikan untuk diinterpolasi. Misal, jika menggunakan interpolasi linear, diasumsikan bahwa pergerakan harga dari hari kerja ke hari kerja lainnya di hari libur konstan. Ini belum tentu benar - mungkin saja di hari Sabtu, harga masih naik dari hari Jumat, tetapi harga turun di hari Minggu. Interpolasi linear akan mengasumsikan harga turun di Sabtu dan Minggu. Oleh karena itu, interpolasi akan menghasilkan aproksimasi kasar dari proses <em>after-hours trading</em>.</p>
+<p>Agregasi data dapat menyelesaikan masalah tersebut karena hasil agregasi dianggap memiliki rentang waktu sama. Misal, mingguan atau bulanan. Agregasi ini harus mengikuti beberapa aturan <span class="citation">(<a href="#ref-soverflow" role="doc-biblioref">Stefan 2019</a>)</span>. Untuk harga <em>opening</em>, akan diambil data harga open dari hari pertama di minggu/bulan tersebut - harga tersebut merupakan harga minyak saat pasar dibuka. Harga <em>close</em> diambil dari harga close hari terakhir di minggu/bulan tersebut - harga tersebut merupakan harga minyak saat pasar ditutup. Harga maksimum dan minimum memiliki logika yang mirip.</p>
+<p>Namun, agregasi data belum tentu menyelesaikan masalah rentang waktu tak sama. Ada beberapa bulan yang memiliki 28, 30, dan 31 hari. Ini berarti rentang pengamatan satu bulan dapat berarti beberapa jarak waktu yang berbeda. Data mingguan selalu memiliki rentang 7 hari jika data diambil dari hari yang sama di setiap minggu. Dalam kasus ini, ini berarti mengasumsikan data di hari Jumat selalu ada untuk <em>closing</em>, atau data hari Senin selalu ada. Mengingat rentang waktu yang cukup lama (8 tahun), kemungkinan besar ada data di hari-hari tersebut yang tidak ada.</p>
+<p>Untuk melihat apakah kemungkinan tersebut terjadi, ambil data per minggu. Lalu, kurangkan hari terakhir di minggu tersebut dengan hari terakhir di minggu sebelumnya untuk mendapatkan jarak antarminggu. Akan digunakan fungsi <code>ISOweek</code> dari package dengan nama yang sama <span class="citation">(<a href="#ref-R-ISOweek" role="doc-biblioref">Block dan Hatto von Hatzfeld 2011</a>)</span> agar pembagian minggu mengikuti standar ISO 8601. Tabel lalu dimanipulasi menggunakan <code>data.table</code> <span class="citation">(<a href="#ref-R-data.table" role="doc-biblioref">Dowle dan Srinivasan 2021</a>)</span>, khusunya fungsi shift yang dapat memunculkan lag 1 dari variabel tertentu.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ISOweek)</span>
+<span id="cb37-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb37-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-4" aria-hidden="true" tabindex="-1"></a>weeklyCrude<span class="ot">&lt;-</span>crudenow[,Week<span class="sc">:</span><span class="er">=</span><span class="fu">ISOweek</span>(X)</span>
+<span id="cb37-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-5" aria-hidden="true" tabindex="-1"></a>         ][,.(<span class="at">Date=</span><span class="fu">last</span>(X),</span>
+<span id="cb37-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">Close=</span><span class="fu">last</span>(<span class="st">`</span><span class="at">CL=F.Close</span><span class="st">`</span>)),by<span class="ot">=</span><span class="fu">list</span>(Week)</span>
+<span id="cb37-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb37-7" aria-hidden="true" tabindex="-1"></a>           ][,Dist<span class="sc">:</span><span class="er">=</span>Date<span class="sc">-</span><span class="fu">shift</span>(Date)]</span></code></pre></div>
+<p>Tidak semua minggu memiliki jarak 7 hari. Ada beberapa minggu dengan jarak 6 dan 8 hari:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb38-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(weeklyCrude[,.(<span class="at">count=</span>.N),<span class="at">by=</span>Dist], <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Jarak&quot;</span>,</span>
+<span id="cb38-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb38-2" aria-hidden="true" tabindex="-1"></a>                                                              <span class="st">&quot;Jumlah&quot;</span>))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Jarak</th>
+<th align="right">Jumlah</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">NA days</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">7 days</td>
+<td align="right">258</td>
+</tr>
+<tr class="odd">
+<td align="left">6 days</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="left">8 days</td>
+<td align="right">9</td>
+</tr>
+<tr class="odd">
+<td align="left">3 days</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<p>Dapat diekstraksi peubah <em>dummy</em> dari minggu-minggu dengan jarak lebih dari 7 hari untuk memodelkan efek minggu-minggu tersebut.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb39-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,Dist<span class="sc">:</span><span class="er">=</span><span class="fu">na.fill</span>(Dist,<span class="at">type=</span><span class="st">&quot;const&quot;</span>,<span class="at">fill=</span><span class="fu">as.Date</span>(<span class="dv">7</span>))</span>
+<span id="cb39-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb39-2" aria-hidden="true" tabindex="-1"></a>         ][,<span class="st">`</span><span class="at">:=</span><span class="st">`</span>(<span class="st">&quot;6DW&quot;</span><span class="ot">=</span><span class="fu">ifelse</span>(Dist<span class="sc">==</span><span class="dv">6</span>,<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb39-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb39-3" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;8DW&quot;</span><span class="ot">=</span><span class="fu">ifelse</span>(Dist<span class="sc">==</span><span class="dv">8</span>,<span class="dv">1</span>,<span class="dv">0</span>))]</span></code></pre></div>
+<p>Peubah tersebut nantinya dapat digunakan dalam pemodelan. Namun, sepertinya baik <em>dummy</em> dengan untuk minggu periode 6 hari dan 8 hari tidak berkorelasi terlalu besar dengan harga minyak saat penutupan pasar:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb40-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">t</span>(<span class="fu">c</span>(<span class="fu">cor</span>(weeklyCrude<span class="sc">$</span><span class="st">`</span><span class="at">6DW</span><span class="st">`</span>,weeklyCrude<span class="sc">$</span>Close,<span class="at">method=</span><span class="st">&quot;spearman&quot;</span>),</span>
+<span id="cb40-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb40-2" aria-hidden="true" tabindex="-1"></a>               <span class="fu">cor</span>(weeklyCrude<span class="sc">$</span><span class="st">`</span><span class="at">8DW</span><span class="st">`</span>,weeklyCrude<span class="sc">$</span>Close,<span class="at">method=</span><span class="st">&quot;spearman&quot;</span>))),</span>
+<span id="cb40-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb40-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">col.names=</span><span class="fu">c</span>(<span class="st">&quot;6 Hari&quot;</span>,<span class="st">&quot;8 hari&quot;</span>),</span>
+<span id="cb40-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb40-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">row.names=</span>F)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">6 Hari</th>
+<th align="right">8 hari</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.0036721</td>
+<td align="right">-0.0055715</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="plot-data" class="section level2 hasAnchor" number="2.2">
+<h2><span class="header-section-number">2.2</span> Plot data<a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Untuk melihat jenis data yang dihadapi, dapat di-plot data deret waktu mingguan harga minyak dari tahun 2017-2022 dengan ggplot2 <span class="citation">(<a href="#ref-R-ggplot2" role="doc-biblioref">Wickham <em>et al.</em> 2021</a>)</span>:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),<span class="at">data=</span>weeklyCrude) <span class="sc">+</span></span>
+<span id="cb41-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>()<span class="sc">+</span><span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span></span>
+<span id="cb41-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span><span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-386-1.png" width="672" /></p>
+<p>Data jelas tidak stasioner.</p>
+</div>
+<div id="latar-belakang-1" class="section level2 hasAnchor" number="2.3">
+<h2><span class="header-section-number">2.3</span> Latar Belakang<a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-1" aria-hidden="true" tabindex="-1"></a>cbbPalette <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;#E69F00&quot;</span>, <span class="st">&quot;#56B4E9&quot;</span>, <span class="st">&quot;#D3D3D3&quot;</span>, <span class="st">&quot;#009E73&quot;</span>, <span class="st">&quot;#CC79A7&quot;</span>)</span>
+<span id="cb42-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-2" aria-hidden="true" tabindex="-1"></a>highlightPalette<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;#D3D3D3&quot;</span>,<span class="st">&quot;#00008b&quot;</span>)</span>
+<span id="cb42-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-4" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;2017 - Siklik&quot;</span><span class="sc">:</span><span class="er">=</span><span class="fu">ifelse</span>(Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2017-11-10&quot;</span>),T,F)]</span>
+<span id="cb42-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb42-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb42-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">2017 - Siklik</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb42-8"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb42-9"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-387-1.png" width="672" /></p>
+<p>Di awal tahun 2017, harga minyak menurun karena komitmen produsen minyak di OPEC untuk memotong produksi minyak diragukan. Selain itu, turunnya volume ekspor Tiongkok menandakan kemungkinan lemahnya permintaan untuk minyak mentah <span class="citation">(<a href="#ref-reu_oil_2017" role="doc-biblioref">Kumar 2017 Jan</a>)</span>. Namun, harga minyak sedikit naik di akhir Januari 2017 karena melemahnya dolar Amerika Serikat - minyak dibeli menggunakan dolar Amerika Serikat, sehingga dolar yang lebih lemah berarti negara pengimpor minyak dapat membeli lebih banyak minyak mentah yang meningkatkan permintaan <span class="citation">(<a href="#ref-reu_oil_2017-1" role="doc-biblioref">Gloystein 2017 Jan</a>)</span>.</p>
+<p>Walaupun terdapat fenomena tersebut, pasokan minyak masih meningkat sehingga harga minyak turun sampai Maret. Arab Saudi berjanji untuk menurunkan produksi di bulan April, tetapi produksi minyak negara OPEC justru meningkat di bulan Juni sampai harga minyak mencapai titik terendahnya <span class="citation">(<a href="#ref-reu_oil_2017-4" role="doc-biblioref">Gloystein 2017 Jun</a>)</span>. Janji OPEC untuk menurunkan produksi minyak dipenuhi di paruh kedua 2017 dan permintaan meningkat. Oleh karena itu, harga minyak meningkat sampai pulih ke level sebelum bulan Juni di bulan November <span class="citation">(<a href="#ref-reu_oil_2017-6" role="doc-biblioref">Gloystein 2017 Des</a>)</span>.</p>
+<p>Secara umum, periode ini ditandakan dengan siklus. Negara OPEC berjanji menurunkan produksi (yang meningkatkan harga), tetapi produksi sebenarnaya masih tinggi (yang menurunkan harga) sehingga harga turun lalu naik.</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb43-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;Awal 2018 - harga naik&quot;</span><span class="sc">:</span><span class="er">=</span><span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2017-11-10&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2018-10-10&quot;</span>),T,F)]</span>
+<span id="cb43-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb43-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb43-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb43-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">Awal 2018 - harga naik</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb43-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb43-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-388-1.png" width="672" /></p>
+<p>Harga minyak naik di akhir tahun 2017 sampai triwulan ketiga 2018. Selain turunnya produksi minyak oleh OPEC, terjadi gangguan pipa minyak di Libya dan Rusia yang menganggu distribusi minyak. Di awal Januari 2018, rendahnya pasokan minyak dunia meningkatkan harga. Walaupun terjadi sedikit penurunan karena Amerika Serikat berencana meningkatkan produksi <span class="citation">(<a href="#ref-reu_oil_2018" role="doc-biblioref">Gloystein 2018 Jan</a>)</span>, negara-negara OPEC masih memotong produksi karena ingin meningkatkan harga minyak. Pada Maret sampai Mei 2018, harga minyak naik karena ketidakstabilan di Suriah, kemungkinan pembatasan impor minyak dari Iran, dan rendahnya produksi minyak OPEC dan Venezuela.</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;Akhir 2018 - harga turun&quot;</span><span class="sc">:</span><span class="er">=</span></span>
+<span id="cb44-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2018-10-10&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2018-12-31&quot;</span>),T,F)]</span>
+<span id="cb44-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb44-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb44-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">Akhir 2018 - harga turun</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb44-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb44-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb44-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-389-1.png" width="672" /></p>
+<p>Harga minyak turun drastis di akhir tahun 2018. Rusia dan Arab Saudi mengumumkan peningkatan produksi untuk menggantikan minyak Iran, pemerintah Amerika Serikat memberi dispensasi ke beberapa perusahaan Iran <span class="citation">(<a href="#ref-woolich_sanctions_nodate" role="doc-biblioref">Woolich <em>et al.</em> 2018</a>)</span>, dan produksi <em>shale oil</em> as meningkat. Dari sisi penawaran, pasokan minyak meningkat yang menurunkan harga <span class="citation">(<a href="#ref-dichristopher_us_2018" role="doc-biblioref">DiChristopher 2018 Des</a>)</span>.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[, <span class="st">&quot;Pra-COVID&quot;</span><span class="sc">:</span><span class="er">=</span></span>
+<span id="cb45-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2019-01-01&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-02-03&quot;</span>),T,F)]</span>
+<span id="cb45-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb45-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb45-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">Pra-COVID</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb45-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb45-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb45-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-390-1.png" width="672" /></p>
+<p>Tahun 2019 diawali dengan peningkatan harga minyak karena penurunan produksi dari Arab Saudi dan sanksi kepada Venezuela. Terdapat penurunan harga di bulan Februari karena melambatnya pertumbuhan ekonomi di Amerika Serikat, yang menghasilkan sedikit fluktuasi naik-turun, tetapi harga minyak tetap naik karena dispensasi ke eksportir minyak Iran berakhir dan pembatasan perdagangan minyak diberlakukan <span class="citation">(<a href="#ref-welle_wwwdwcom_us_nodate" role="doc-biblioref">2019</a>)</span>. Namun, setelah mencapai puncak di bulan April, harga minyak turun di bulan Mei saat Amerika Serikat mengumumkan perang dagang dengan Tiongkok <span class="citation">(<a href="#ref-reu_oil_2019" role="doc-biblioref">Kumar 2019 Agu</a>)</span>. Harga kembali naik di bulan Juni setelah Iran menjatuhkan <em>drone</em> Amerika Serikat, yang meningkatkan ketidakstabilan di Timur Tengah. Pengumuman tarif baru dalam perang dagang oleh Amerika Serikat menurunkan kembali harga minyak, tetapi ekspektasi penurunan produksi oleh OPEC meningkatkan harga minyak di November 2019.</p>
+<p>Secara umum, fluktuasi naik-turun terjadi karena tekanan perang dagang (yang menurunkan harga karena menurunkan permintaan minyak) dan tekanan dari OPEC serta ketidakstabilan Timur Tengah yag meningkatkan harga minyak.</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;COVID&quot;</span><span class="sc">:</span><span class="er">=</span></span>
+<span id="cb46-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-02-03&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-04-30&quot;</span>),T,F)]</span>
+<span id="cb46-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb46-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb46-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">COVID</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb46-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb46-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-391-1.png" width="672" /></p>
+<p>Harga minyak dunia terjun bebas dari Februari sampai April 2020. Pandemi COVID-19 mengurangi aktivitas ekonomi sehingga permintaan minyak berkurang. Karena itu, negara-negara OPEC setuju untuk mengurangi produksi, kecuali Rusia. Terjadi perang harga minyak antara Arab Saudi dan Rusia. Arab Saudi meningkatkan produksi dan memberikan diskon harga minyak, sampai minyak turun drastis <span class="citation">(<a href="#ref-calhoun_saudirussia_nodate" role="doc-biblioref">Calhoun 2020</a>)</span>. Akhirnya, tekanan dari Amerika Serikat ke Arab Saudi (dan penurunan devisa Arab Saudi dan Rusia saat harga minyak rendah) membuat kedua negara setuju untuk memotong produksi. Namun, harga masih turun di akhir April sampai menjadi negatif karena biaya menyimpan minyak lebih mahal dari harga jualnya <span class="citation">(<a href="#ref-lw_oil_2020" role="doc-biblioref">Mills 2020 Apr</a>)</span>.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;Pemulihan&quot;</span><span class="sc">:</span><span class="er">=</span></span>
+<span id="cb47-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-04-30&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-10-24&quot;</span>),T,F)]</span>
+<span id="cb47-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb47-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb47-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">Pemulihan</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb47-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb47-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb47-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-392-1.png" width="672" /></p>
+<p>Setelah bulan April, penurunan produksi minyak OPEC dan Amerika Serikat mulai memiliki efek dan harga minyak kembali meningkat. Di bulan Juli harga minyak turun sedikit karena menguatnya dolar (sehingga pengimpor minyak susah membeli minyak), rendahnya permintaan, dan pasokan Amerika Serikat yang lebih tinggi dari harapan. Berita mengenai Presiden Amerika Serikat pada bulan Oktober, Donald Trump, yang terkena COVID juga menurunkan harga minyak. Namun, fluktuasi tersebut relatif kecil dibandingkan fluktuasi-fluktuasi yang terjadi saat awal COVID. Berita mengenai vaksin COVID di akhir 2020 <span class="citation">(<a href="#ref-pfizer_2020" role="doc-biblioref">Pfizer 2020 Nov</a>)</span> meningkatkan kepercayaan bahwa ekonomi dunia akan kembali pulih, dan harga minyak mulai naik.</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-1" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;Vaksin, Varian&quot;</span><span class="sc">:</span><span class="er">=</span></span>
+<span id="cb48-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2020-10-24&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-02-13&quot;</span>),</span>
+<span id="cb48-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-3" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Vaksinasi&quot;</span>,</span>
+<span id="cb48-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-02-02&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-05-07&quot;</span>),</span>
+<span id="cb48-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-5" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Alpha&quot;</span>,</span>
+<span id="cb48-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-6" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-05-07&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-09-01&quot;</span>),</span>
+<span id="cb48-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-7" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Delta&quot;</span>,</span>
+<span id="cb48-8"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-8" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-09-01&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-12-01&quot;</span>),</span>
+<span id="cb48-9"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-9" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Omicron&quot;</span>,<span class="st">&quot;Lainnya&quot;</span>))))]</span>
+<span id="cb48-10"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb48-11"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb48-12"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">Vaksin, Varian</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>cbbPalette)<span class="sc">+</span></span>
+<span id="cb48-13"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb48-14"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb48-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-393-1.png" width="672" /></p>
+<p>Tren umum harga minyak naik karena optimisme mengenai vaksin. OPEC juga masih membatasi produksi pada awal tahun 2021. Namun, tren tersebut tidak mulus karena muncul beberapa varian COVID-19. Varian Alpha disebut <em>variant of concern</em> pada Februari 2021. Harga minyak turun karena infeksi dari varian Alpha meningkat. Lalu, setelah varian tersebut teratasi, pemulihan ekonomi dunia meningkatkan harga minyak. Delta mulai disebut <em>variant of conern</em> pada Mei 2021, dan di beberapa negara peningkatan kasus dari Delta masih ada sampai bulan September. Harga minyak turun <span class="citation">(<a href="#ref-reu_oil_2021" role="doc-biblioref">2021 Agu</a>)</span>. Namun, badai Ida di Amerika Serikat yang mengaggu produksi minyak, penurunan produksi OPEC, dan perbaikan hubungan Amerika Serikat-Tiongkok meningkatkan harga minyak. Saat varian Omicron muncul, harga minyak turun lagi <span class="citation">(<a href="#ref-resnick-ault_oil_2021" role="doc-biblioref">Resnick-ault 2021 Des</a>)</span>.</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-1" aria-hidden="true" tabindex="-1"></a>cbbPalette2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;#D3D3D3&quot;</span>,<span class="st">&quot;#E69F00&quot;</span>, <span class="st">&quot;#56B4E9&quot;</span>)</span>
+<span id="cb49-2"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-3" aria-hidden="true" tabindex="-1"></a>weeklyCrude[,<span class="st">&quot;2022&quot;</span><span class="sc">:</span><span class="er">=</span></span>
+<span id="cb49-4"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2021-12-01&quot;</span>) <span class="sc">&amp;</span> Date<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2022-02-24&quot;</span>),</span>
+<span id="cb49-5"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-5" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;Pemulihan Omicron&quot;</span>,</span>
+<span id="cb49-6"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-6" aria-hidden="true" tabindex="-1"></a>              <span class="fu">ifelse</span>(Date<span class="sc">&gt;=</span><span class="fu">as.Date</span>(<span class="st">&quot;2022-02-24&quot;</span>),<span class="st">&quot;Perang Ukraina-Russia&quot;</span>,<span class="st">&quot;Lainnya&quot;</span>))]</span>
+<span id="cb49-7"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Date, <span class="at">y=</span>Close),</span>
+<span id="cb49-8"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">data=</span>weeklyCrude)<span class="sc">+</span></span>
+<span id="cb49-9"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span><span class="st">`</span><span class="at">2022</span><span class="st">`</span>))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>cbbPalette2)<span class="sc">+</span></span>
+<span id="cb49-10"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb49-11"><a href="praproses-dan-eksplorasi-data-2017-2022.html#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-394-1.png" width="672" /></p>
+<p>Harga minyak naik di awal tahun 2022 setelah varian Omicron ditemukan memiliki tingkat kematian lebih rendah. Stok minyak di Amerika Serikat menurun, dan stok di Uni Emirat Arab terganggu setelah negara tersebut diserang oleh Houthi. Lalu, perang Rusia-Ukraina pada 24 Februari 2022 meningkatkan harga minyak secara drastis karena impor minyak dari Rusia dapat dihentikan oleh Amerika Serikat dan negara Eropa Barat. Harga minyak turun dari puncaknya di awal Maret setelah Amerika Serikat bernegosiasi dengan Iran dan Venezuela untuk mengganti pasokan minyak, mulai ada perundingan antara Rusia dan Ukraina, serta rencana Amerika Serikat untuk mengeluarkan pasokan strategis minyaknya <span class="citation">(<a href="#ref-cnn_us_nodate" role="doc-biblioref">Mattingly <em>et al.</em> 2022</a>)</span>.</p>
+<p>Dampak invasi Rusia ke Ukraina sangat signifikan terhadap harga minyak di negara-negara barat terutama Eropa yang sangat bergantung terhadap minyak dari Rusia. Invasi tersebut menyebabkan disrupsi suplai minyak dari Rusia akibat perang dan rencana embargo minyak mentah karena agresi Rusia mulai diperbincangkan. Harga minyak yang tinggi juga berpengaruh terhadap harga komoditas pangan karena logistik dari satu tempat ke tempat lainnya membutuhkan bahan bakar minyak <span class="citation">(<a href="#ref-islam_ukraine_nodate" role="doc-biblioref">Islam 2022</a>)</span>.</p>
+<p>Selain negara-negara barat, dampak harga minyak juga terasa di negara-negara Asia. Meskipun nilai perdagangan dengan Rusia rendah, kenaikan harga komoditas pangan akibat logistik yang terganggu akan mengakibatkan inflasi semakin parah dan menghambat pemulihan ekonomi pasca pandemi. Untuk mengatasi hal tersebut, berbagai negara seperti Korea dan Jepang memberlakukan subsidi harga minyak untuk meminimalkan dampak ekonomi dari tingginya harga minyak <span class="citation">(<a href="#ref-kammer_how_nodate" role="doc-biblioref">Kammer <em>et al.</em></a>)</span>.</p>
+
+</div>
+</div>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-barclay_price_2015" class="csl-entry">
+Barclay MJ, Hendershott T. 2015. Price <span>Discovery</span> and <span>Trading</span> <span>After</span> <span>Hours</span>. <em>The Review of Financial Studies</em>. 16(4):1041–1073.doi:<a href="https://doi.org/10.1093/rfs/hhg030">10.1093/rfs/hhg030</a>.
+</div>
+<div id="ref-R-ISOweek" class="csl-entry">
+Block U, Hatto von Hatzfeld using an algorithm by. 2011. <em>ISOweek: Week of the year and weekday according to ISO 8601</em>. Ed ke-R package version 0.6-2.
+</div>
+<div id="ref-calhoun_saudirussia_nodate" class="csl-entry">
+Calhoun G. 2020. The <span>Saudi</span>/<span>Russia</span> <span>Oil</span> <span>Price</span> <span>War</span>: <span>Historic</span> <span>Blunder</span> #1. <em>Forbes</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.forbes.com/sites/georgecalhoun/2020/06/03/the-other-epidemic-a-cluster-of-historic-blunders---exhibit-1-the-saudirussia-oil-price-war/">https://www.forbes.com/sites/georgecalhoun/2020/06/03/the-other-epidemic-a-cluster-of-historic-blunders---exhibit-1-the-saudirussia-oil-price-war/</a>
+</div>
+<div id="ref-cryer_time_2008" class="csl-entry">
+Cryer JD, Chan KS. 2008. <em>Time <span>Series</span> <span>Analysis</span>: <span>With</span> <span>Applications</span> in <span>R</span></em>. Springer New York. (Springer <span>Texts</span> in <span>Statistics</span>).
+</div>
+<div id="ref-dichristopher_us_2018" class="csl-entry">
+DiChristopher T. 2018 Des. <span>US</span> crude tumbles 4.8% to 17-month low, settling at $45.88, as stock market slides. <em>CNBC</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.cnbc.com/2018/12/20/oil-markets-global-economy-crude-supply-in-focus.html">https://www.cnbc.com/2018/12/20/oil-markets-global-economy-crude-supply-in-focus.html</a>
+</div>
+<div id="ref-R-data.table" class="csl-entry">
+Dowle M, Srinivasan A. 2021. <em>data.table: Extension of ‘data.frame‘</em>. Ed ke-R package version 1.14.2.
+</div>
+<div id="ref-fouroil" class="csl-entry">
+Elshendy M, Colladon AF, Battistoni E, Gloor PA. 2018. Using four different online media sources to forecast the crude oil price. <em>Journal of Information Science</em>. 44(3):408–421.doi:<a href="https://doi.org/10.1177/0165551517698298">10.1177/0165551517698298</a>.
+</div>
+<div id="ref-reu_oil_2017-6" class="csl-entry">
+Gloystein H. 2017 Des. Oil prices near 2015 highs on tight market. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL4N1OS18H">https://www.reuters.com/article/global-oil-idUSL4N1OS18H</a>
+</div>
+<div id="ref-reu_oil_2017-1" class="csl-entry">
+Gloystein H. 2017 Jan. Oil prices rise on weakening dollar, but plentiful supplies cap gains. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL4N1FG18Z">https://www.reuters.com/article/global-oil-idUSL4N1FG18Z</a>
+</div>
+<div id="ref-reu_oil_2017-4" class="csl-entry">
+Gloystein H. 2017 Jun. Oil prices fall on <span>OPEC</span> output increase, rising <span>U</span>.<span>S</span>. crude stocks. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL3N1JB05K">https://www.reuters.com/article/global-oil-idUSL3N1JB05K</a>
+</div>
+<div id="ref-reu_oil_2018" class="csl-entry">
+Gloystein H. 2018 Jan. Oil prices drop on uptick in <span>U</span>.<span>S</span>. production. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL3N1PE14V">https://www.reuters.com/article/global-oil-idUSL3N1PE14V</a>
+</div>
+<div id="ref-fpp2" class="csl-entry">
+Hyndman RJ, Athanasopoulos G. 2018. <em>Forecasting: Principles and Practice</em>. ed ke-2. Australia: OTexts.
+</div>
+<div id="ref-islam_ukraine_nodate" class="csl-entry">
+Islam F. 2022. Ukraine <span>Conflict</span>: <span>Petrol</span> at <span>Fresh</span> <span>Record</span> as <span>Oil</span> and <span>Gas</span> <span>Prices</span> <span>Soar</span>. <em>BBC</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.bbc.com/news/business-60642786">https://www.bbc.com/news/business-60642786</a>
+</div>
+<div id="ref-kammer_how_nodate" class="csl-entry">
+Kammer A, Azour J, Selassie AA, Goldfajn I, Rhee C. How <span>War</span> in <span>Ukraine</span> <span>Is</span> <span>Reverberating</span> <span>Across</span> <span>World</span>’s <span>Regions</span>. <em>IMF</em>. [diunduh 2022 Apr 10]
+</div>
+<div id="ref-reu_oil_2017" class="csl-entry">
+Kumar DK. 2017 Jan. Oil falls on <span>China</span> concerns, down 3 percent for the week on <span>OPEC</span> doubts. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/us-global-oil-idUSKBN14X04K">https://www.reuters.com/article/us-global-oil-idUSKBN14X04K</a>
+</div>
+<div id="ref-reu_oil_2019" class="csl-entry">
+Kumar DK. 2019 Agu. Oil spills into <span>U</span>.<span>S</span>.-<span>China</span> trade war, prices slump. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/us-usa-trade-china-oil-idUSKCN1VD22D">https://www.reuters.com/article/us-usa-trade-china-oil-idUSKCN1VD22D</a>
+</div>
+<div id="ref-cnn_us_nodate" class="csl-entry">
+Mattingly P, Liptak K, Collins K, Egan M. 2022. <span>US</span> and allies agree to release 60 million barrels of oil from their reserves as <span>Russian</span> invasion of <span>Ukraine</span> causes price spike - <span>CNNPolitics</span>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://edition.cnn.com/2022/03/01/politics/us-strategic-petroleum-reserve-release-latest/index.html">https://edition.cnn.com/2022/03/01/politics/us-strategic-petroleum-reserve-release-latest/index.html</a>
+</div>
+<div id="ref-lw_oil_2020" class="csl-entry">
+Mills A. 2020 Apr. Oil <span>ETFs</span>, <span>Contango</span> and negative oil prices. <em>Livewire Markets</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.livewiremarkets.com/wires/oil-etfs-contango-and-negative-oil-prices">https://www.livewiremarkets.com/wires/oil-etfs-contango-and-negative-oil-prices</a>
+</div>
+<div id="ref-reu_oil_2021" class="csl-entry">
+Oil prices fall on <span>U</span>.<span>S</span>. crude stock build, <span>Delta</span> variant spread. 2021 Agu. <em>CNBC</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.cnbc.com/2021/08/04/oil-markets-covid-delta-variant.html">https://www.cnbc.com/2021/08/04/oil-markets-covid-delta-variant.html</a>
+</div>
+<div id="ref-pfizer_2020" class="csl-entry">
+Pfizer. 2020 Nov. Pfizer and <span>BioNTech</span> <span>Announce</span> <span>Vaccine</span> <span>Candidate</span> <span>Against</span> <span>COVID</span>-19 <span>Achieved</span> <span>Success</span> in <span>First</span> <span>Interim</span> <span>Analysis</span> from <span>Phase</span> 3 <span>Study</span>. <em>Business Wire</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.businesswire.com/news/home/20201109005539/en/%C2%A0Pfizer-and-BioNTech-Announce-Vaccine-Candidate-Against-COVID-19-Achieved-Success-in-First-Interim-Analysis-from-Phase-3-Study">https://www.businesswire.com/news/home/20201109005539/en/%C2%A0Pfizer-and-BioNTech-Announce-Vaccine-Candidate-Against-COVID-19-Achieved-Success-in-First-Interim-Analysis-from-Phase-3-Study</a>
+</div>
+<div id="ref-resnick-ault_oil_2021" class="csl-entry">
+Resnick-ault J. 2021 Des. Oil prices post weekly loss on <span>Omicron</span> uncertainty. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/markets/commodities/oil-heads-flat-week-omicron-uncertainty-2021-12-17/">https://www.reuters.com/markets/commodities/oil-heads-flat-week-omicron-uncertainty-2021-12-17/</a>
+</div>
+<div id="ref-soverflow" class="csl-entry">
+Stefan (https://stackoverflow.com/users/1494637/stefan). 2019. converting daily stock data to weekly-based via pandas in Python. <em>Stack Overflow</em>.
+</div>
+<div id="ref-welle_wwwdwcom_us_nodate" class="csl-entry">
+<span>US</span> to end sanctions waivers for <span>Iranian</span> oil imports <span>\</span>textbar <span>DW</span> <span>\</span>textbar 22.04.2019. 2019. <em>Deutsche Welle</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.dw.com/en/us-to-end-sanctions-waivers-for-iranian-oil-imports/a-48435237">https://www.dw.com/en/us-to-end-sanctions-waivers-for-iranian-oil-imports/a-48435237</a>
+</div>
+<div id="ref-R-ggplot2" class="csl-entry">
+Wickham H, Chang W, Henry L, Pedersen TL, Takahashi K, Wilke C, Woo K, Yutani H, Dunnington D. 2021. <em>ggplot2: Create Elegant Data Visualisations Using the Grammar of Graphics</em>. Ed ke-R package version 3.3.5.
+</div>
+<div id="ref-woolich_sanctions_nodate" class="csl-entry">
+Woolich A, Martin D, Hunt S, Arroyo P. 2018. Sanctions <span>Update</span>: <span>US</span> sanctions on <span>Iran</span>, 8 <span>May</span> 2018. <em>Holman Fenwick Willan</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.hfw.com/Sanctions-Update-US-sanctions-on-Iran-8-May-2018">https://www.hfw.com/Sanctions-Update-US-sanctions-on-Iran-8-May-2018</a>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="praproses-dan-eksplorasi-data.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/02-praeksplo2rev.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

@@ -1,0 +1,70 @@
+--- 
+title: "Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah"
+author: 
+- Adley Dityo Valentinus Putra	(G14180009)
+- Muhammad Ammar Sahab		(G14190020)
+- Putri Eka Perdanti			(G14190027)
+- Farhan Narendra Achyara		(G14190050)
+- Grashella Clara Nesa Br Ginting	(G14190086)
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib, article.bib, misc.bib, praeksplor2.bib]
+url: 'https://bookdown.org/mammarsahab3/LaporanMPDW'
+# cover-image: path to the social sharing image like images/cover.jpg
+description: "Laporan Tugas Akhir MPDW (Kelompok 10)"
+link-citations: yes
+github-repo: rstudio/bookdown-demo
+---
+# Pendahuluan {-}
+
+https://bookdown.org/mammarsahab3/LaporanMPDW/
+
+## Struktur penelitian {-}
+
+Laporan ini akan membandingkan beberapa metode peralaman deret waktu untuk data harga minyak mentah. Metode tersebut akan dilatih menggunakan harga minyak mentah dari tahun 2009 sampai 2016, lalu diuji dengan meramal harga minyak mentah tahun 2017. Pembagian tersebut juga dilakukan di [@He2018], yang membandingkan model deret waktu seperti pemulusan dan ARIMA dengan model pembelajaran mesin (SVM). Berbeda dengan penelitian tersebut, penelitian ini akan menambahkan jenis pemulusan yang dipakai, serta mencoba menambahkan pengaruh peubah bebas *dummy* yang memodelkan efek hari setelah libur, peubahan struktural pada rezim harga minyak, dan lain-lain. Sekarang, penulisan laporan masih dalam tahap praproses dan eksplorasi data. 
+
+## Ekstraksi data {-}
+
+Dataset yang digunakan sebagai berikut. Ambil data minyak dari tahun 2000 sampai sekarang `Sys.Date()` dengam bantuan library `quantmod` [@R-quantmod]:
+
+```{r, warning=FALSE, message=FALSE, results="hide"}
+library(quantmod)
+library(dtplyr)
+library(dplyr)
+library(data.table)
+
+start <- as.POSIXct("2000-08-23")
+end <- as.POSIXct(Sys.Date())
+
+getSymbols(Symbols = "CL=F",src = "yahoo", from = start, to = end)
+
+crude<- lazy_dt(`CL=F`) %>% 
+  mutate(X=as.Date(index,format="%d/%m/%Y")) %>% select(X,`CL=F.Close`)
+```
+
+Data tersebut merupakan harga kontrak berjangka minyak West Texas Intermediate (WTI) yang diperdangangkan di New York Mercantile Exchange (NYMEX). Peubah yang akan dimodelkan adalah harga *close*, atau harga minyak saat pasar ditutup:
+
+```{r}
+knitr::kable(head(crude,n=5),
+             col.names = c("Tanggal","Harga Penutupan"))
+```
+
+Lakukan pembagian data. Data yang diambil selalu data terbaru karena menggunakan `Sys.Date()`:
+
+```{r}
+crude0917 <-crude %>% filter(X >= as.Date("2009-01-01") & X <= as.Date("2017-12-31"))
+
+crudenow  <- crude %>% filter(X >= as.Date("2017-01-01") & X <= as.Date(Sys.Date())) %>% data.table::as.data.table()
+```
+
+Sudah diambil data yang relevan untuk diteliti. 
+
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown','imputeTS','aTSA','strucchange','dplyr','ggplot2','timeDate',
+  'quantmod','data.table','latex2exp','ISOweek'
+), 'packages.bib')
+```
+

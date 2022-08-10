@@ -1,0 +1,1138 @@
+# Analisis Intervensi pada model ARIMA
+
+```{r warning=F, message=FALSE}
+library(forecast)
+library(TSA)
+library(ggplot2)
+```
+
+Akan dilakukan pemodelan di tiga periode: saat awal COVID, *rebuilding* setelah COVID pada akhir tahun 2020, dan masa sekarang
+
+## Awal COVID
+
+Secara umum metode pemulusan cukup buruk dalam meramal harga minyak saat COVID dan perang Rusia-Ukraina. Oleh karena itu, coba ambil data saat COVID terlebih dahulu. Jika dilihat dari tabel di bawah, harga minyak mulai turun pada minggu kesembilan 2020 (28 Februari 2020), dan tetap turun. Oleh karena itu, ambil dua titik data awal dari penurunan tersebut (28 Februari dan 06 Februari) untuk menandakan intervensi tersebut, lalu coba ramal titik-titik selanjutnya.
+
+```{r}
+knitr::kable(weeklyCrude[160:170])
+```
+
+### ARIMA
+
+Ambil semua data sampai 6 Maret 2020 (observasi ke-166) sebagai data latih. Titik intervensi COVID yang diambil adalah 28 Februari (observasi ke-165).
+
+```{r}
+wcrude.covid<-subset(weeklyCrude, Date<=as.Date("2020-04-13"))
+wcrude.train<-subset(wcrude.covid, Date<=as.Date("2020-03-06"))
+```
+
+#### Cek Kestasioneran Data dan Identifikasi
+
+```{r}
+acf(wcrude.train$Close,
+    main="ACF Harga Minyak pra-COVID")
+```
+
+Dari plot time series yang dibuat saat eksplorasi telah ditunjukkan bahwa data tidak stasioner. Plot ACF tersebut juga menunjukkan bahwa data tidak stasioner karena pola turun secara perlahan. Untuk itu perlu dilakukan differencing:
+
+```{r}
+WCrude.covid_diff <- diff(wcrude.train$Close, differences= 1)
+
+#Plot time series
+ts.plot(WCrude.covid_diff,
+        main = "First Difference Haarga Minyak pra-COVID",
+        ylab = " ")
+```
+Berdasarkan hasil plot time series dapat dilihat bahwa data telah stasioner pada suatu nilai tertentu. Namun, terlihat lonjakan di akhir sebagai efek dari COVID. Untuk memastikannya maka akan dilihat plot ACF:
+
+```{r}
+acf(WCrude.covid_diff, lag.max = 20, main = "Plot ACF")
+pacf(WCrude.covid_diff, lag.max = 20, main = "Plot PACF")
+```
+Melalui plot ACF dan PACF dapat dilihat bahwa data sudah stasioner. Plot ACF dan PACF langsung *cut off* pada lag 1.
+
+Untuk memastikannya dapat dilakukan Uji Formal Augmented Dickey-Fuller Test sebagai berikut.
+
+Hipotesis:
+$$
+\begin{aligned}
+H_0&: \text{ Data tidak stasioner}\\
+H_1&: \text{ Data stasioner}
+\end{aligned}
+$$
+```{r}
+#ADF Test#
+aTSA::adf.test(WCrude.covid_diff)
+```
+
+Karena nilai P-Value = 0.01 < alpha = 0.05, maka tolak H0. Artinya model tersebut stasioner.
+
+
+```{r}
+eacf(WCrude.covid_diff)
+```
+Berdasarkan plot EACF tersebut, diperoleh dugaan model lainnya yaitu ARIMA (0,1,1), ARIMA (1,1,0), ARIMA(1,1,1),dan ARIMA(1,1,2). Sehingga setelah dilakukan spesifikasi, terdapat 4 model tentatif yang dapat diuji.
+
+#### Pendugaan Parameter
+
+```{r}
+model1.Wcrude=Arima(wcrude.train$Close, order=c(0,1,1),method="ML")
+model2.Wcrude=Arima(wcrude.train$Close, order=c(1,1,0),method="ML")
+model3.Wcrude=Arima(wcrude.train$Close, order=c(1,1,1),method="ML")
+model4.Wcrude=Arima(wcrude.train$Close, order=c(1,1,2),method="ML")
+
+knitr::kable(
+  cbind(c("ARIMA (0,1,1)","ARIMA (1,1,0)","ARIMA (1,1,1)","ARIMA (1,1,2)"),
+        c(model1.Wcrude$aic,model2.Wcrude$aic,model3.Wcrude$aic,model4.Wcrude$aic)),
+  col.names=c("Model","AIC")
+)
+
+```
+
+Model dengan AIC terkecil adalah $ARIMA(1,1,1)$. Semua koefisiennya juga beda signifikan dari nol:
+
+```{r}
+lmtest::coeftest(model3.Wcrude)
+```
+#### Diagnostik dan Forecasting
+
+```{r}
+covArima<-Arima(wcrude.train$Close,
+                order=c(1,1,1),
+                method="ML")
+```
+
+Diagnostik model sebenarnya cukup baik:
+
+```{r}
+checkresiduals(covArima)
+```
+
+Tapi prediksi model tidak sesuai dengan apa yang akan terjadi. Bandingkan prediksi untuk 2 minggu saja:
+
+```{r}
+forcdef<-forecast(covArima,5)
+
+
+wcrude.covid[,`:=`("fitted.def"=c(forcdef$fitted,rep(NA,5)),  
+                  "predicted.def"=c(rep(NA,166),forcdef$mean),
+                  "lwr.def"=c(rep(NA,166),forcdef$lower[,2]),
+                  "upr.def"=c(rep(NA,166),forcdef$upper[,2]))]
+
+
+ggplot(aes(x=Date,y=Close),data=wcrude.covid[150:168])+
+  geom_point(size=3, alpha=0.3, color="gray")+
+  geom_line(aes(y=fitted.def,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Prediksi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Prediksi", fill="Prediksi"),alpha=0.3)+
+  scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Prediksi'),
+                     values=c('Fitted'='black', 'Prediksi'='#DB0000'))+
+    scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Prediksi'),
+                     values=c('Fitted'='black', 'Prediksi'='#DB0000'))+
+
+    theme_minimal()
+
+```
+
+Tentu prediksi tersebut cukup buruk. 
+
+### Analisis intervensi
+
+Lakukan pemodelan ARIMAX (analisis intervensi) dengan sebuah fungsi transfer. Pada dasarnya kita akan membuat suatu peubah dummy pada 28 Februari 2020 untuk menandakan reaksi pasar terhadap COVID. Lalu akan dimodelkan dengan suatu fungsi [@cryer_time_2008]:
+
+$$
+m_t=\frac{(\theta_0+\theta_1B+...+\theta_{q-1}B^{q-1})}{(1-\phi_1 B -...-\phi_p B^p)} P_t
+$$
+
+Dengan:
+$$
+\begin{aligned}
+m_t&=\text{ Pengaruh intervensi (COVID) di waktu ke-t}\\
+Z_t&=\begin{cases}
+1, & t=165 \text{ (28 Februari 2020, mulai COVID)}\\
+0, &\text{lainnya}\\
+\end{cases}\\
+\end{aligned}
+$$
+
+Salah satu model paling sederhana adalah dengan $AR(1)$ - pada dasarnya model intervensi akan menjadi:
+
+$$
+\begin{aligned}
+m_t&=\frac{\theta_0}{(1-\phi_1 B)} P_t\\
+(1-\phi_1B)m_t&=\theta_0P_t\\
+m_t-\phi_1m_{t-1}&=\theta_0P_t\\
+m_t&=\theta_0P_t+\phi_1m_{t-1}
+\end{aligned}
+$$
+
+Saat $P_{t}=1$, tentu $P_{t-1}=0$, $m_{t-2}=0$ (intervensi belum memiliki efek). Oleh karena itu dapat dilihat bahwa di waktu intervensi ke-r:
+
+$$
+\begin{aligned}
+m_r&=\theta_0\\
+m_{r+1}&=\theta_0\cdot0+\phi_1m_{r}=\phi_1\theta_0\\
+m_{r+2}&=\theta_0\cdot0+\phi_1m_{r+1}=\phi_1^2\theta_0\\
+\end{aligned}
+$$
+
+Dan seterusnya. Saat $\phi_1<0$, fungsi ini menandakan suatu efek yang lama-kelamaan mengalami *decay*. Coba modelkan fungsi yang ada dengan metode tersebut:
+
+```{r}
+intvmod<-arimax(wcrude.train$Close, order=c(1,1,1),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train))==165)),
+       transfer=list(c(1,0)))
+intvmod
+```
+
+Terlihat bahwa AIC model dengan intervensi lebih baik:
+
+```{r}
+knitr::kable(
+  cbind(c("Tanpa Intervensi","Intervensi"),
+        c(covArima$aic,intvmod$aic)),
+  col.names=c("Model","AIC")
+)
+```
+
+Begitu juga akurasinya:
+
+```{r}
+compAcc<-rbind(accuracy(covArima),accuracy(intvmod))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Diagnostik residual juga oke. Lonjakan karena COVID tidak muncul lagi:
+
+```{r}
+checkresiduals(intvmod)
+```
+
+Semua koefisien juga beda signifikan dari nol:
+
+```{r}
+lmtest::coeftest(intvmod)
+```
+
+Nampaknya di term intervensi $AR(1)$ merupakan model terbaik:
+
+```{r}
+arimax(wcrude.train$Close, order=c(1,1,1),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train))==165)),
+       transfer=list(c(0,0)))
+```
+
+AIC model intervensi $MA(0)$ lebih tinggi. Model intervensi lain tidak dapat diduga dengan informasi yang ada:
+
+```{r error=TRUE}
+arimax(wcrude.train$Close, order=c(1,1,1),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train))==165)),
+       transfer=list(c(0,1)))
+arimax(wcrude.train$Close, order=c(1,1,1),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train))==165)),
+       transfer=list(c(1,1)))
+```
+
+#### Forecasting
+
+Forecasting model intervensi ini cukup kompleks. Dapat digunakan fungsi filter di R untuk menduga efek dari intervensi tersebut:
+
+```{r}
+m.earlyCOV<-stats::filter(1*(seq(nrow(wcrude.train)+5)==165),
+              filter=1.5199, "recursive")* -7.914
+m.earlyCOV[165:171]
+```
+
+Ini dapat diverifikasi dengan manual:
+
+$$
+\begin{aligned}
+m_r&=-7.9141\\
+m_{r+1}&=\phi_1\theta_0=1.5199\cdot -7.9141=-12.02864059\\
+m_{r+2}&=\phi_1^2\theta_0=1.5199^{2}\cdot7.9141=-18.28233083\\
+m_{r+3}&=\phi_1^3\theta_0=1.5199^{3}\cdot7.9141=-27.78731\\
+\end{aligned}
+$$
+
+Lalu, hasil dari filter akan dimasukkan sebagai regressor di fungsi Arima yang dimiliki package forecast:
+
+```{r}
+intv.mod<-Arima(wcrude.train$Close, order=c(1,1,1),
+      xreg=m.earlyCOV[1:166])
+intv.mod
+```
+
+Terlihat bahwa koefisien COVID sama dengan satu. Ini pertanda baik, karena pada dasarnya kita membuat spesifikasi di mana koefisien dari regressor tersebut harus satu:
+$$
+Y_{t}=m_{t}+N_{t}= \text{ efek intervensi}+ \text{ ARIMA}
+$$
+
+Sehingga sebenarnya akan diregresikan nilai-nilai $m_{t}$ yang telah ditemukan saja. Lakukan forecast:
+
+```{r}
+forcinv<-forecast(intv.mod,5,xreg=m.earlyCOV[167:171])
+```
+
+### Perbandingan
+
+Dan plot. Awalnya, duga sebanyak 2 periode saja:
+
+```{r warning=FALSE}
+wcrude.covid[,`:=`("fitted.intv"=c(forcinv$fitted,rep(NA,5)),  
+                  "predicted.intv"=c(rep(NA,166),forcinv$mean),
+                  "lwr.intv"=c(rep(NA,166),forcinv$lower[,2]),
+                  "upr.intv"=c(rep(NA,166),forcinv$upper[,2]))]
+
+ggplot(aes(x=Date,y=Close),data=wcrude.covid[150:168])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.intv,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Tanpa Intervensi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Tanpa Intervensi", 
+                  fill="Tanpa Intervensi"),alpha=0.2)+
+  geom_point(aes(y=predicted.intv,color="Intervensi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intv,ymax=upr.intv, color="Intervensi", 
+                  fill="Intervensi"),alpha=0.2)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    theme_minimal()+ylab(" ")+
+  ggtitle(" Perbandingan Model Intervensi dan non-Intervensi terbaik")
+```
+
+Namun, model ini tidak cocok untuk peramalan jangka panjang. Jika dilakukan peramalan dengan durasi sebulan (4 minggu), dugaan akan sangat jauh dari aktual. Fakta ini dapat dilihat dari plot:
+
+```{r warning=FALSE}
+wcrude.covid[,`:=`("fitted.intv"=c(forcinv$fitted,rep(NA,5)),  
+                  "predicted.intv"=c(rep(NA,166),forcinv$mean),
+                  "lwr.intv"=c(rep(NA,166),forcinv$lower[,2]),
+                  "upr.intv"=c(rep(NA,166),forcinv$upper[,2]))]
+
+ggplot(aes(x=Date,y=Close),data=wcrude.covid[150:170])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.intv,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Tanpa Intervensi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Tanpa Intervensi", 
+                  fill="Tanpa Intervensi"),alpha=0.2)+
+  geom_point(aes(y=predicted.intv,color="Intervensi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intv,ymax=upr.intv, color="Intervensi", 
+                  fill="Intervensi"),alpha=0.2)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    theme_minimal()+ylab(" ")+
+  ggtitle(" Perbandingan Model Intervensi dan non-Intervensi terbaik")
+```
+
+Ini terjadi karena kita tidak mengetahui cerita dari intervensi tersebut secara sepenuhnya. Terakhir, bandingkan error testing, pertama untuk prediksi dua periode ke depan:
+
+```{r}
+compAcc<-rbind(accuracy(wcrude.covid$Close[1:168],
+                        wcrude.covid$predicted.def[1:168]),
+               accuracy(wcrude.covid$Close[1:168],
+                        wcrude.covid$predicted.intv[1:168]))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Dan untuk lima periode ke depan:
+
+```{r}
+compAcc<-rbind(accuracy(wcrude.covid$Close,
+                        wcrude.covid$predicted.def),
+               accuracy(wcrude.covid$Close,
+                        wcrude.covid$predicted.intv))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Jelas bahwa secara jangka pendek (dua minggu), model dengan intervensi lebih baik daripada model tanpa intervensi. Namun, model tidak tepat digunakan untuk prediksi jauh ke depan.
+
+## COVID rebuilding
+
+Analisis intervensi juga berguna untuk pemodelan data setelah efek intervensi habis, misal saat harga minyak naik kembali setelah COVID. Ambil data sampai akhir 2020:
+
+```{r}
+wcrude.rebuild1<-subset(weeklyCrude,Date<=as.Date("2020-12-31"))
+```
+
+Plot data tersebut:
+
+```{r}
+ggplot(aes(x=Date,y=Close),data=wcrude.rebuild1[160:209,])+
+  geom_point(size=3, alpha=0.6, color="gray")+theme_minimal()
+```
+
+Ambil data sapai Juni 2020 sebagai data latih. Secara umum, rebuilding terjadi setelah harga sangat rendah di sekitar Mei 2020, sehingga saat Juni 2020 sudah terjadi sedikit kenaikan harga minyak:
+
+```{r}
+wcrude.train2<-subset(weeklyCrude,Date<=as.Date("2020-05-21"))
+```
+
+Data tersebut jelas belum stasioner:
+
+```{r}
+acf(wcrude.train2$Close,
+    main= "ACF harga minyak sebelum COVID rebuilding")
+```
+
+Maka lakukan differencing:
+
+```{r}
+difftrainreb<-diff(wcrude.train2$Close,1)
+
+aTSA::adf.test(difftrainreb)
+```
+
+Data sudah stasioner. Lalu identifikasi kandidat model:
+
+```{r}
+acf(difftrainreb)
+pacf(difftrainreb)
+```
+
+Baik ACF dan PACF signifikan di lag pertama lalu *cut off*. EACF:
+
+```{r}
+eacf(difftrainreb)
+```
+
+Kandidat model adalah $ARIMA(1,1,0)$, $ARIMA(0,1,1)$, $ARIMA(2,1,1)$, dan $ARIMA(1,1,1)$ :
+
+```{r}
+rmod1<-Arima(wcrude.train2$Close,order=c(1,1,0))
+rmod2<-Arima(wcrude.train2$Close,order=c(0,1,1))
+rmod3<-Arima(wcrude.train2$Close,order=c(2,1,1))
+rmod4<-Arima(wcrude.train2$Close,order=c(1,1,1))
+
+knitr::kable(
+  cbind(c("ARIMA (1,1,0)","ARIMA (0,1,1)","ARIMA (2,1,1)","ARIMA (1,1,1)"),
+        c(rmod1$aic,rmod2$aic,rmod3$aic,rmod4$aic)),
+  col.names=c("Model","AIC")
+)
+```
+
+Menunjukkan bahwa Arima(2,1,1) model terbaik dengan semua koefisien signifikan di taraf $10/%$:
+
+```{r}
+lmtest::coeftest(rmod3)
+```
+
+Tetap saja ada lonjakan besar di residual saat COVID:
+
+```{r}
+checkresiduals(rmod3)
+```
+
+Intinya setelah dicoba $ARIMA(0,1,1)$ oke:
+
+Tren naik kembali tidak dapat diprediksi.
+
+```{r}
+forcdef.reb<-forecast(rmod3,33)
+
+wcrude.rebuild1[,`:=`("fitted.def"=c(forcdef.reb$fitted,rep(NA,33)),  
+                  "predicted.def"=c(rep(NA,176),forcdef.reb$mean),
+                  "lwr.def"=c(rep(NA,176),forcdef.reb$lower[,2]),
+                  "upr.def"=c(rep(NA,176),forcdef.reb$upper[,2]))]
+
+
+ggplot(aes(x=Date,y=Close),data=wcrude.rebuild1[150:185])+
+  geom_point(size=3, alpha=0.3, color="gray")+
+  geom_line(aes(y=fitted.def,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Prediksi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Prediksi", fill="Prediksi"),alpha=0.3)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Prediksi'),
+                     values=c('Fitted'='black', 'Prediksi'='#DB0000'))+
+    theme_minimal()
+
+```
+
+Dapat dicoba berbagai spesifikasi model arimax. Pertama akan dicobakan spesifikasi arimax sebelumnya, yaitu AR saja. Koefisien MA lalu ditingkatkan sampai 3, lalu dicobakan cara [@cryer_time_2008], yaitu membuat dua peubah untuk memisahkan efek langsung dari COVID dan efek yang secara eksponen turun. Efek langsung dimodelkan dengan MA dan efek turun dimodelkan dengan AR. Efek yang lebih kompleks untuk intervensi hanya dapat dimodelkan dengan $ARIMA(1,1,0)$ untuk kesluruhan, tetapi ini tidak apa-apa karena model tersebut sebenarnya memiliki AIC yang mendekati $ARIMA(2,1,1)$:
+
+```{r, error=TRUE}
+arimaxdef<-arimax(wcrude.train2$Close,order=c(2,1,1),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train2))==165)),
+       transfer=list(c(1,0)))
+arimaxmad1<-arimax(wcrude.train2$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train2))==165)),
+       transfer=list(c(1,1)))
+arimaxmad2<-arimax(wcrude.train2$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train2))==165)),
+       transfer=list(c(1,2)))
+arimaxmad3<-arimax(wcrude.train2$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train2))==165)),
+       transfer=list(c(1,3)))
+arimaxd1<-arimax(wcrude.train2$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train2))==165),
+                          COVIDb=1*(seq(nrow(wcrude.train2))==165)),
+       transfer=list(c(0,1),c(1,0)))
+arimaxd2<-arimax(wcrude.train2$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(wcrude.train2))==165),
+                          COVIDb=1*(seq(nrow(wcrude.train2))==165)),
+       transfer=list(c(0,2),c(1,0)))
+```
+
+Bandingkan AIC tiap spesifikasi model tersebut:
+
+```{r}
+knitr::kables(list(
+  knitr::kable(arimaxdef$aic,col.names="Intervensi AR(1)"),
+  knitr::kable(cbind(arimaxmad1$aic,arimaxmad2$aic,arimaxmad3$aic),
+               col.names=c("ARMA(1,1)","ARMA(1,2)","MA(1,3)")),
+  knitr::kable(cbind(arimaxd1$aic,arimaxd2$aic),col.names=c("MA(1)+AR(1)","MA(2)+AR(1)"))
+  )
+)
+```
+
+Sehingga model terbaik adalah:
+
+```{r}
+lmtest::coeftest(arimaxmad3)
+```
+
+Terlihat bahwa semua koefisien lebih besar dari galat baku, sehingga kemungkinan signifikan.Signifikansi koefisien $AR(1)$ cukup *worrying*, tetapi probabilitas koefisien tersebut muncul jika koefisiennya sebenarnya nol masih sekitar $26/%$. Residual kedua model tampak oke:
+
+```{r}
+checkresiduals(arimaxmad3)
+```
+
+Perhatikan spesifikasi model tersebut secara matematis:
+
+$$
+\begin{aligned}
+m_t&=\frac{(\theta_0+\theta_1B+\theta_2B^2+\theta_3B^3)}{(1-\phi_1 B)} P_t\\
+(1-\phi_1B)m_t&=\theta_0P_t+\theta_1P_{t-1}+\theta_2P_{t-2}+\theta_3P_{t-3}\\
+m_t-\phi_1m_{t-1}&=\theta_0P_t+\theta_1P_{t-1}+\theta_2P_{t-2}+\theta_3P_{t-3}\\
+m_t&=\theta_0P_t+\theta_1P_{t-1}+\theta_2P_{t-2}+\theta_3P_{t-3}+\phi_1m_{t-1}\\
+\end{aligned}
+$$
+
+Sama seperti sebelumnya, untuk forecasting nilai tersebut dapat dicari dengan fungsi filter:
+
+```{r}
+COVID=1*(seq(nrow(wcrude.rebuild1))==165)
+
+tss<-stats::filter(COVID,c(-8.471105,    -4.447146,   -10.611313,   -10.643718),"convolution",sides=1)
+tss[is.na(tss)]<-0
+
+m<-stats::filter(tss,0.960466,"recursive",sides=1)
+m[165:209]
+```
+
+Empat hasil hitungan pertama mirip dengan hitungan manual. Selanjutnya dapat dengan mudah diverifikasi dengan mengalikan dengan pangkat dari $\phi_1$.
+
+$$
+\begin{aligned}
+m_{r}&=\theta_0&&=-8.4711    \\
+m_{r+1}&=\theta_1+\phi_1\theta_0&=-4.4471+0.9605    \cdot -8.4711&=−12.5835\\
+m_{r+2}&=\theta_2+\phi_1m_{r+1}=\theta_2+\phi_1\theta_1+\phi_1^2\theta_0&=-10.6113+0.9605\cdot−12.5835&=−22.69775175\\
+m_{r+3}&=\theta_3+\phi_1m_{r+2}=\theta_3+\phi_1\theta_2+\phi_1^2\theta_1+\phi_1^3\theta_0&=-10.6437+0.9605\cdot−22.69775175&=−32.44489057\\
+m_{r+k}&=\phi_1^{k-3}m_{r+k-1}=\phi_1^{k-3}\theta_3+\phi_1^{k-2}\theta_2+\phi_1^{k-1}\theta_1+\phi_1^k\theta_0\\
+\end{aligned}
+$$
+
+```{r}
+(0.9605^(1:20))*-32.44489057
+```
+
+Gunakan fungsi Arima lalu prediksi:
+
+```{r}
+rebuildModfin<-Arima(wcrude.train2$Close,order=c(1,1,0),
+                     xreg=m[1:176])
+rebuildModfin
+forc.inv.reb<-forecast(rebuildModfin,33,xreg=m[177:209])
+```
+
+Dalam periode sama, dapat dilihat bahwa prediksi model ARIMAX lebih baik:
+
+```{r, warning=FALSE}
+wcrude.rebuild1[,`:=`("fitted.intv"=c(forc.inv.reb$fitted,rep(NA,33)),  
+                  "predicted.intv"=c(rep(NA,176),forc.inv.reb$mean),
+                  "lwr.intv"=c(rep(NA,176),forc.inv.reb$lower[,2]),
+                  "upr.intv"=c(rep(NA,176),forc.inv.reb$upper[,2]))]
+
+ggplot(aes(x=Date,y=Close),data=wcrude.rebuild1[150:185])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.intv,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Tanpa Intervensi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Tanpa Intervensi", 
+                  fill="Tanpa Intervensi"),alpha=0.1)+
+  geom_point(aes(y=predicted.intv,color="Intervensi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intv,ymax=upr.intv, color="Intervensi", 
+                  fill="Intervensi"),alpha=0.1)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    theme_minimal()+ylab(" ")+ggtitle(" Perbandingan Model Intervensi dan non-Intervensi terbaik")
+```
+
+Bahkan, jika diekspansi sampai akhir 2020, prediksi masih baik.
+
+```{r, warning=FALSE}
+ggplot(aes(x=Date,y=Close),data=wcrude.rebuild1[150:209])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.intv,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Tanpa Intervensi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Tanpa Intervensi", 
+                  fill="Tanpa Intervensi"),alpha=0.1)+
+  geom_point(aes(y=predicted.intv,color="Intervensi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intv,ymax=upr.intv, color="Intervensi", 
+                  fill="Intervensi"),alpha=0.1)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    theme_minimal()+ylab(" ")+
+  ggtitle(" Perbandingan Model Intervensi dan non-Intervensi terbaik")
+```
+
+Dapat dibandingkan akurasi di training:
+
+```{r}
+compAcc<-rbind(accuracy(rmod3),accuracy(arimaxmad3))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+knitr::kable(compAcc,row.names=T,digits =4)
+```
+
+Peramalan 9 periode:
+
+```{r}
+compAcc.1<-rbind(accuracy(wcrude.rebuild1$Close[1:185],
+                          wcrude.rebuild1$predicted.def[1:185]),
+                 accuracy(wcrude.rebuild1$Close[1:185],
+                          wcrude.rebuild1$predicted.intv[1:185]))
+rownames(compAcc.1)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(compAcc.1,row.names=T,digits =4)
+```
+
+Peramalan 33 periode:
+
+```{r}
+compAcc.2<-rbind(accuracy(wcrude.rebuild1$Close[1:209],
+                          wcrude.rebuild1$predicted.def[1:209]),
+                 accuracy(wcrude.rebuild1$Close[1:209],
+                          wcrude.rebuild1$predicted.intv[1:209]))
+rownames(compAcc.2)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(compAcc.1,row.names=T,digits =4)
+```
+
+Model dengan intervensi umumnya lebih baik.
+
+## Masa Sekarang
+
+Perang Ukraina Rusia dimulai di Februari 24, 2020. Ambil data ke 269 dan 270 (awal Maret), lalu prediksi harga minyak sampai akhir.
+
+```{r}
+weeklyCrude[269:277]
+crude.ukr<-subset(weeklyCrude, Date<=as.Date("2022-03-04"))
+```
+
+### ARIMA
+
+#### Cek Kestasioneran Data
+
+```{r}
+acf(crude.ukr$Close)
+```
+Model tersebut tidak stasioner karena pola ACF tersebut turun secara perlahan. jadi diperlukan differencing untuk mengatasinya. 
+
+```{r}
+crudeoil_diff <- diff(crude.ukr$Close, differences= 1)
+ts.plot(crudeoil_diff)
+```
+Hasil differencing menunjukkan pola data yang stasioner dengan nilai rataan tertentu, tetapi saat COVID dan di akhir (Rusia-Ukraina) terjadi gejolak. Cek kembali dengan plot ACF. 
+
+```{r}
+acf(crudeoil_diff)
+pacf(crudeoil_diff)
+```
+
+Plot ACF dan PACF langsung cut off setelah lag 0. Tetapi, untuk tetap mendapatkan pendugaan parameter, diduga plot crude oil tersebut mengikuti pola ARIMA(0,1,1) atah ARIMA(1,1,0).
+
+```{r}
+eacf(crudeoil_diff)
+```
+
+Plot EACF menghasilkan berbagai model tentatif, model tersebut adalah ARIMA(0,1,1), ARIMA(1,1,1), ARIMA(2,0,1), dan ARIMA(0,1,3). Lalu, dugalah parameter dari setiap model untuk mendapatkan model terbaik. 
+
+#### Pendugaan Parameter
+
+```{r}
+model1.crude1=Arima(crude.ukr$Close, order=c(0,1,1),method="ML")
+model1.crude2=Arima(crude.ukr$Close, order=c(1,1,0),method="ML")
+model1.crude3=Arima(crude.ukr$Close, order=c(1,1,1),method="ML")
+model1.crude4=Arima(crude.ukr$Close, order=c(2,1,1),method="ML")
+model1.crude5=Arima(crude.ukr$Close, order=c(0,1,3),method="ML")
+
+knitr::kable(
+  cbind(c("ARIMA (0,1,1)","ARIMA (1,1,0)","ARIMA (1,1,1)","ARIMA (2,1,1)","ARIMA (0,1,3)"),
+        c(model1.crude1$aic,model1.crude2$aic,model1.crude3$aic,model1.crude4$aic,
+          model1.crude5$aic)),
+  col.names=c("Model","AIC")
+)
+```
+
+Model terbaik berdasarkan AIC: $ARIMA(1,1,1)$. Semua koefisiennya signifikan:
+
+```{r}
+lmtest::coeftest(model1.crude3)
+```
+
+#### Diagnostik Sisaan ARIMA(1,1,0)
+
+```{r}
+checkresiduals(model1.crude3)
+```
+
+Terlihat bahwa semua diagnostik baik, kecuali sisaan tak normal karena ada beberapa amatan berpengaruh (Ukraina dan COVID). Untuk mengetahui kenormalan sisaan, terdapat 2 cara, yaitu secara eksploratif melalui Q-Q Plot, plot sisaan, plot ACF, dan plot PACF dan uji formal seperti Kolmogorov-Smirnov Test, Ljung Box Test, dan T-test. 
+
+```{r}
+sisaan.crude <- model1.crude2$residuals
+par(mfrow=c(2,2))
+qqnorm(sisaan.crude)
+qqline(sisaan.crude, col = "blue", lwd = 2)
+plot(c(1:length(sisaan.crude)),sisaan.crude)
+acf(sisaan.crude)
+pacf(sisaan.crude)
+```
+Secara eksploratif, baik plot Q-Q dan sisaan terdapat pencilan di beberapa data yang membuat sisaan tersebut cenderung tidak mengikuti sebaran normal. Untuk memastikan apakah sebaran sisaan normal, perlu untuk dilakukan uji formal.
+
+```{r}
+ks.test(sisaan.crude,"pnorm")
+Box.test(sisaan.crude, type = "Ljung")
+t.test(sisaan.crude, mu = 0, conf.level = 0.95) 
+```
+#### Forecasting
+
+Ramalan model tersebut sebagai berikut (walaupun sebenarnya kurang tepat meramal dengan model diagnostik kurang baik):
+
+```{r warning=FALSE}
+forcdefukr<-forecast(model1.crude2,7)
+
+weeklyCrude[,`:=`("fitted.def"=c(forcdefukr$fitted,rep(NA,8)),  
+                  "predicted.def"=c(rep(NA,271),forcdefukr$mean),
+                  "lwr.def"=c(rep(NA,271),forcdefukr$lower[,2]),
+                  "upr.def"=c(rep(NA,271),forcdefukr$upper[,2]))]
+
+ggplot(aes(x=Date,y=Close),data=weeklyCrude[260:277])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.def,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Prediksi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Prediksi", 
+                  fill="Prediksi"),alpha=0.2)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Prediksi'),
+                     values=c('Fitted'='black', 'Prediksi'='#DB0000'))+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Prediksi'),
+                     values=c('Fitted'='black', 'Prediksi'='#DB0000'))+
+    theme_minimal()+ylab(" ")
+```
+
+### ARIMAX
+
+Prediksi tersebut cukup tinggi. Bagaimana dengan model ARIMAX - akan ditambahkan peubah *dummy* untuk COVID dan Ukraina. Sebenarnya bisa saja dimodelkan hal seperti vaksinasi, varian Delta, dan Omicron, tetapi agar model tetap sederhana model dua  hal itu saja. Untuk spesifikasi *dummy* Ukraina, akan diuji $MA(0)$ - kenaikan intersep, $MA(1)$, $AR(1)$, dan $ARMA(1)$:
+
+```{r}
+ukrmax1<-arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       transfer=list(c(1,3),c(0,0)))
+
+ukrmax2<-arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       transfer=list(c(1,3),c(0,1)))
+
+ukrmax3<-arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       transfer=list(c(1,3),c(1,0)))
+
+ukrmax4<-arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       transfer=list(c(1,3),c(1,1)))
+```
+
+Bandingkan AIC tiap spesifikasi tersebut:
+
+```{r}
+  knitr::kable(cbind(ukrmax1$aic, ukrmax2$aic, ukrmax3$aic, ukrmax4$aic),  
+               col.names=c("MA(0)","MA(1)","AR(1)", "ARMA(1,1)"))
+```
+
+Terlihat bahwa spesifikasi AR(1) atau MA(1) baik:
+
+```{r}
+lmtest::coeftest(ukrmax2)
+lmtest::coeftest(ukrmax3)
+```
+
+Tampaknya lebih banyak koefisien signifikan di spesifikasi AR, tapi kita harus pikirkan implikasi dari memilih model tersebut. Efek awal perang sebesar $-3.55$. Lalu dikalikan $-5.389$ menjadi sekitar 15. Lalu dikalikan lagi menjadi sekitar $-75$. Dugaan tersebut tentu sangat aneh - harga berflukutasi plus-minus sangat besar. Uji residual model tersebut. 
+
+```{r}
+checkresiduals(ukrmax2)
+checkresiduals(ukrmax3)
+```
+
+Spesifikasi intervensi $AR(1)$ lebih baik dalam uji Ljung-Box. Namun, kedua spesifikasi berhasil mengatasi masalah non-normaltas. Walaupun begitu, akan tetap diambil spesifikasi $MA(1)$ karena ramalan spesifikasi intervensi $AR(1)$ akan aneh.
+
+```{r}
+arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       fixed=c(NA,NA,NA,NA,NA,NA,0,NA),
+       transfer=list(c(1,3),c(0,1)))
+
+arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       fixed=c(0,NA,NA,NA,NA,NA,NA,NA),
+       transfer=list(c(1,3),c(0,1)))
+
+arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       fixed=c(NA,NA,NA,0,NA,NA,NA,NA),
+       transfer=list(c(1,3),c(0,1)))
+```
+
+Terlihat bahwa membuat koefisien $MA(0)$ di intervensi Ukraina menurunkan AIC dan nampaknya meningkatkan nilai semua koefisien relatif ke s.e-nya:
+
+```{r}
+intvmodukr<- arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       fixed=c(NA,NA,NA,NA,NA,NA,0,NA),
+       transfer=list(c(1,3),c(0,1)))
+```
+
+Data tidak saling bebas, tetapi semua koefisien beda signifikan dari nol di taraf $15\%$
+
+```{r}
+checkresiduals(intvmodukr)
+lmtest::coeftest(intvmodukr)
+```
+
+Namun ts diag dan ACF menandakan bahwa residual tidak berkorelasi. Kebanyakan garis tidak melewati signifikansi, dan p-values Ljung-Box di berbagai lag berada di atas garis juga.
+
+```{r warning=FALSE}
+acf(intvmodukr$residuals, lag.max=250, na.action=na.pass)
+tsdiag(intvmodukr, gof.lag=250,na.action=na.pass)
+```
+
+Sekarang, lakukan ramalan dengan model tersebut, dengan fungsi filter:
+
+```{r}
+COVID=1*(seq(nrow(weeklyCrude))==165)
+covreg<-stats::filter(COVID,c(-7.7107, -3.6061, -9.6746, -10.0563  ),"convolution",sides=1)
+covreg[is.na(covreg)]<-0
+covreg<-stats::filter(covreg,0.1120,"recursive",sides=1)
+
+UR=1*(seq(nrow(weeklyCrude))==269)
+URReg<-stats::filter(UR,c(0,24.1401),"convolution",sides=1)
+```
+
+Lalu masukkan ke Arima:
+
+```{r}
+modfin.ukr<-Arima(crude.ukr$Close,order=c(1,1,0),
+             xreg=cbind(covreg,URReg)[1:270,])
+modfin.ukr
+```
+
+Koefisien intervensi Ukraina mendekati 1, tetapi tidak untuk COVID. Lakukan pendugaan dan plot:
+
+```{r warning=FALSE}
+forc.inv.ukr<-forecast(modfin.ukr,7,xreg=cbind(covreg,URReg)[272:278,])
+
+weeklyCrude[,`:=`("fitted.intv"=c(forc.inv.ukr$fitted,rep(NA,8)),  
+                  "predicted.intv"=c(rep(NA,271),forc.inv.ukr$mean),
+                  "lwr.intv"=c(rep(NA,271),forc.inv.ukr$lower[,2]),
+                  "upr.intv"=c(rep(NA,271),forc.inv.ukr$upper[,2]))]
+
+ggplot(aes(x=Date,y=Close),data=weeklyCrude[260:278])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.intv,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Tanpa Intervensi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Tanpa Intervensi", 
+                  fill="Tanpa Intervensi"),alpha=0.1)+
+  geom_point(aes(y=predicted.intv,color="Intervensi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intv,ymax=upr.intv, color="Intervensi", 
+                  fill="Intervensi"),alpha=0.1)+
+    scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 'Intervensi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00' ))+
+    theme_minimal()+ylab(" ")+ggtitle(" Perbandingan Model Intervensi dan non-Intervensi terbaik")
+```
+
+Model intervensi menduga harga minyak lebih rendah daripada model intervensi. Namun, tidak terlihat jelas mana model yang lebih baik. Bandingkan nilai akurasi:
+
+```{r}
+compAcc<-rbind(accuracy(weeklyCrude$Close,
+                        weeklyCrude$predicted.def),
+               accuracy(weeklyCrude$Close,
+                        weeklyCrude$predicted.intv))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Model intervensi memiliki MAE dan RMSE lebih rendah, tapi MAPE lebih tinggi. MAPE memberikan penalti lebih besar pada error yang negatif [@fpp3], sehingga dalam kasus ini MAE dan RMSE lebih dapat dipercaya - model intervensi baik. Ini juga terlihat di training:
+
+```{r}
+compAcc<-rbind(accuracy(weeklyCrude$Close[271:274],
+                        weeklyCrude$predicted.def[271:274]),
+               accuracy(weeklyCrude$Close[271:274],
+                        weeklyCrude$predicted.intv[271:274]))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Namun, di jangka waktu pendek model tanpa intervensi lebih baik ramalannya.
+
+```{r}
+compAcc<-rbind(accuracy(model1.crude2),
+               accuracy(intvmodukr))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Model intervensi memiliki akurasi lebih baik di training juga.
+
+### Rev: Penanganan autokorelasi
+
+Model intervensi Ukraina sebelumnya memiliki masalah autokorelasi. Ditemukan bahwa dengan menambah satu term MA pada intervensi COVID, autokorelasi tersebut hilang:
+
+```{r}
+intvmod.noautocor<-arimax(crude.ukr$Close,order=c(1,1,0),
+       xtransf=data.frame(COVID=1*(seq(nrow(crude.ukr))==165),
+                          UR=1*(seq(nrow(crude.ukr))==269)),
+       fixed=c(NA,NA,NA,NA,NA,NA,NA,0,NA),
+       transfer=list(c(1,4),c(0,1)))
+```
+
+Dapat dilihat bahwa ACF tidak melewati garis signifikansi:
+
+```{r}
+acf(intvmod.noautocor$residuals, na.action=na.pass)
+```
+
+Tidak ada autokorelasi yang berbeda signifikan dari nol di lag sampai 20. Jika ditambah sampai lag yang sangat banyak:
+
+```{r}
+acf(intvmod.noautocor$residuals, na.action=na.pass, lag.max=250)
+```
+
+Terdapat autokorelasi yang melewati garis, tapi sudah relatif jauh (lebih dari lag 50). Begitu juga untuk tsdiag:
+
+```{r warning=FALSE}
+tsdiag(intvmod.noautocor, gof.lag=100, na.action=na.pass)
+```
+
+Di kebanyakan lag, hipotesis bahwa galat saling bebas tidak ditolak oleh uji Ljung-Box.
+
+```{r}
+qqnorm(intvmod.noautocor$residuals)
+qqline(intvmod.noautocor$residuals)
+```
+
+Secara eksploratif residual tampak normal, begitu juga secara uji:
+
+```{r}
+nonas<-intvmod.noautocor$residuals[!is.na(intvmod.noautocor$residuals)]
+
+ks.test(nonas,pnorm, 
+        mean(nonas),
+        sd(nonas))
+shapiro.test(nonas)
+```
+
+Residual nampak normal. Forecasting dilakukan dengan melihat koefisien:
+
+```{r}
+lmtest::coeftest(intvmod.noautocor)
+intvmod.noautocor
+```
+
+Ada masalah dalam kasus ini, yaitu koefisien AR tidak signifikan. Walaupun begitu lanjutkan saja forecasting:
+
+```{r}
+COVID=1*(seq(nrow(weeklyCrude))==165)
+covreg<-stats::filter(COVID,c(-5.2364,-4.8070,-9.7964,-14.9503,-11.6914 ),"convolution",sides=1)
+covreg[is.na(covreg)]<-0
+covreg<-stats::filter(covreg,-0.0787,"recursive",sides=1)
+
+
+UR=1*(seq(nrow(weeklyCrude))==269)
+URReg<-stats::filter(UR,c(0,23.9878),"convolution",sides=1)
+
+
+modfin.ukr<-Arima(crude.ukr$Close,order=c(1,1,0),
+                  xreg=cbind(covreg,URReg)[1:270,])
+modfin.ukr
+```
+
+Koefisien regressor mendekati 1 - ini adalah pertanda yang baik.
+
+```{r}
+forc.inv.ukr<-forecast(modfin.ukr,8,xreg=cbind(covreg,URReg)[271:278,])
+
+weeklyCrude[,`:=`("fitted.intvrev"=c(forc.inv.ukr$fitted,rep(NA,8)),  
+                  "predicted.intvrev"=c(rep(NA,270),forc.inv.ukr$mean),
+                  "lwr.intvrev"=c(rep(NA,270),forc.inv.ukr$lower[,2]),
+                  "upr.intvrev"=c(rep(NA,270),forc.inv.ukr$upper[,2]))]
+
+ggplot(aes(x=Date,y=Close),data=weeklyCrude[260:278])+
+  geom_point(size=3, alpha=0.3, color="darkgray")+
+  geom_line(aes(y=fitted.intvrev,color="Fitted"))+
+  geom_point(aes(y=predicted.def,color="Tanpa Intervensi"), size=3, alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.def,ymax=upr.def, color="Tanpa Intervensi", 
+                  fill="Tanpa Intervensi"),alpha=0.1)+
+  geom_point(aes(y=predicted.intv,color="Intervensi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intv,ymax=upr.intv, color="Intervensi", 
+                  fill="Intervensi"),alpha=0.1)+
+  geom_point(aes(y=predicted.intvrev,color="Revisi"),size=3,alpha=0.5)+
+  geom_ribbon(aes(ymin=lwr.intvrev,ymax=upr.intvrev, color="Revisi", 
+                  fill="Revisi"),alpha=0.1)+
+  scale_color_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 
+                              'Intervensi', 'Revisi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00',
+                              'Revisi' = '#56B4E9'))+
+  scale_fill_manual(name='Prediksi ARIMA',
+                     breaks=c('Fitted', 'Tanpa Intervensi', 
+                              'Intervensi', 'Revisi' ),
+                     values=c('Fitted'='black', 
+                              'Tanpa Intervensi'='#DB0000', 
+                              'Intervensi'='#E69F00',
+                              'Revisi' = '#56B4E9'))+
+  theme_minimal()+ylab(" ")+ggtitle(" Perbandingan Model Intervensi dan non-Intervensi terbaik")
+```
+
+
+
+Model intervensi menduga harga minyak lebih rendah daripada model tanpa intervensi, baik yang telah direvisi atau tidak. Namun, tidak terlihat jelas mana model yang lebih baik. Bandingkan nilai akurasi:
+
+```{r}
+compAcc<-rbind(accuracy(weeklyCrude$Close,
+                        weeklyCrude$predicted.def),
+               accuracy(weeklyCrude$Close,
+                        weeklyCrude$predicted.intv),
+               accuracy(weeklyCrude$Close,
+                        weeklyCrude$predicted.intvrev))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi","Revisi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Namun, di jangka waktu pendek model tanpa intervensi lebih baik ramalannya menurut MAPE. Model revisi memiliki ramalan terburuk.
+
+```{r}
+compAcc<-rbind(accuracy(weeklyCrude$Close[271:274],
+                        weeklyCrude$predicted.def[271:274]),
+               accuracy(weeklyCrude$Close[271:274],
+                        weeklyCrude$predicted.intv[271:274]),
+                accuracy(weeklyCrude$Close[271:274],
+                        weeklyCrude$predicted.intvrev[271:274]))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi", "Revisi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Model intervensi memiliki MAE dan RMSE lebih rendah, tapi MAPE lebih tinggi. MAPE memberikan penalti lebih besar pada error yang negatif [@fpp3], sehingga dalam kasus ini MAE dan RMSE lebih dapat dipercaya - model intervensi baik. Ini juga terlihat di training:
+
+```{r}
+compAcc<-rbind(accuracy(model1.crude2),
+               accuracy(intvmodukr),
+               accuracy(intvmod.noautocor))
+rownames(compAcc)<-c("Tanpa Intervensi","Intervensi","Revisi")
+
+knitr::kable(
+        compAcc,
+  row.names=T,
+  digits =4
+)
+```
+
+Akurasi model revisi lebih baik dari intervensi.

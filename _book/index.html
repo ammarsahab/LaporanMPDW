@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</title>
+  <meta name="description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  
+  <meta name="twitter:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  
+
+<meta name="author" content="Adley Dityo Valentinus Putra (G14180009)" />
+<meta name="author" content="Muhammad Ammar Sahab (G14190020)" />
+<meta name="author" content="Putri Eka Perdanti (G14190027)" />
+<meta name="author" content="Farhan Narendra Achyara (G14190050)" />
+<meta name="author" content="Grashella Clara Nesa Br Ginting (G14190086)" />
+
+
+<meta name="date" content="2022-04-26" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+
+<link rel="next" href="praproses-dan-eksplorasi-data.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+
+<li class="divider"></li>
+<li><a href="index.html#pendahuluan">Pendahuluan<span></span></a>
+<ul>
+<li><a href="index.html#struktur-penelitian">Struktur penelitian<span></span></a></li>
+<li><a href="index.html#ekstraksi-data">Ekstraksi data<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html"><i class="fa fa-check"></i><b>1</b> Praproses dan Eksplorasi Data<span></span></a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#interval-waktu-data"><i class="fa fa-check"></i><b>1.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="1.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas"><i class="fa fa-check"></i><b>1.2</b> Pola-pola data dan stasioneritas<span></span></a></li>
+<li class="chapter" data-level="1.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#latar-belakang"><i class="fa fa-check"></i><b>1.3</b> Latar Belakang<span></span></a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009"><i class="fa fa-check"></i><b>1.3.1</b> Harga Minyak Mentah Tahun 2009<span></span></a></li>
+<li class="chapter" data-level="1.3.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#arab-spring"><i class="fa fa-check"></i><b>1.3.2</b> Arab Spring<span></span></a></li>
+<li class="chapter" data-level="1.3.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#shale-revolution"><i class="fa fa-check"></i><b>1.3.3</b> Shale Revolution<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural"><i class="fa fa-check"></i><b>1.4</b> Titik-titik perubahan struktural<span></span></a></li>
+<li class="chapter" data-level="1.5" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#kestastioneran"><i class="fa fa-check"></i><b>1.5</b> Kestastioneran<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html"><i class="fa fa-check"></i><b>2</b> Praproses dan Eksplorasi Data (2017-2022)<span></span></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1"><i class="fa fa-check"></i><b>2.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data"><i class="fa fa-check"></i><b>2.2</b> Plot data<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1"><i class="fa fa-check"></i><b>2.3</b> Latar Belakang<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><i class="fa fa-check"></i><b>3</b> Optimisasi Parameter Pemulusan dengan Validasi Silang<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metode"><i class="fa fa-check"></i><b>3.1</b> Metode<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-deret-waktu"><i class="fa fa-check"></i><b>3.1.1</b> Validasi Silang Deret Waktu<span></span></a></li>
+<li class="chapter" data-level="3.1.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metrik"><i class="fa fa-check"></i><b>3.1.2</b> Metrik<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#single-moving-average"><i class="fa fa-check"></i><b>3.2</b> Single Moving Average<span></span></a></li>
+<li class="chapter" data-level="3.3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-untuk-sma"><i class="fa fa-check"></i><b>3.3</b> Validasi silang untuk SMA<span></span></a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan"><i class="fa fa-check"></i><b>3.3.1</b> Kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#dma"><i class="fa fa-check"></i><b>3.4</b> DMA<span></span></a></li>
+<li class="chapter" data-level="3.5" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#ses"><i class="fa fa-check"></i><b>3.5</b> SES<span></span></a></li>
+<li class="chapter" data-level="3.6" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#des"><i class="fa fa-check"></i><b>3.6</b> DES<span></span></a></li>
+<li class="chapter" data-level="3.7" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan-1"><i class="fa fa-check"></i><b>3.7</b> Kesimpulan<span></span></a></li>
+<li class="chapter" data-level="3.8" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#addendum-last-block"><i class="fa fa-check"></i><b>3.8</b> Addendum: Last Block<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html"><i class="fa fa-check"></i><b>4</b> Analisis Intervensi pada model ARIMA<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#awal-covid"><i class="fa fa-check"></i><b>4.1</b> Awal COVID<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima"><i class="fa fa-check"></i><b>4.1.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.1.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#analisis-intervensi"><i class="fa fa-check"></i><b>4.1.2</b> Analisis intervensi<span></span></a></li>
+<li class="chapter" data-level="4.1.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#perbandingan"><i class="fa fa-check"></i><b>4.1.3</b> Perbandingan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#covid-rebuilding"><i class="fa fa-check"></i><b>4.2</b> COVID rebuilding<span></span></a></li>
+<li class="chapter" data-level="4.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#masa-sekarang"><i class="fa fa-check"></i><b>4.3</b> Masa Sekarang<span></span></a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima-1"><i class="fa fa-check"></i><b>4.3.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.3.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arimax"><i class="fa fa-check"></i><b>4.3.2</b> ARIMAX<span></span></a></li>
+<li class="chapter" data-level="4.3.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#rev-penanganan-autokorelasi"><i class="fa fa-check"></i><b>4.3.3</b> Rev: Penanganan autokorelasi<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="header">
+<h1 class="title">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</h1>
+<p class="author"><em>Adley Dityo Valentinus Putra (G14180009)</em></p>
+<p class="author"><em>Muhammad Ammar Sahab (G14190020)</em></p>
+<p class="author"><em>Putri Eka Perdanti (G14190027)</em></p>
+<p class="author"><em>Farhan Narendra Achyara (G14190050)</em></p>
+<p class="author"><em>Grashella Clara Nesa Br Ginting (G14190086)</em></p>
+<p class="date"><em>2022-04-26</em></p>
+</div>
+<div id="pendahuluan" class="section level1 unnumbered hasAnchor">
+<h1>Pendahuluan<a href="index.html#pendahuluan" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p><a href="https://bookdown.org/mammarsahab3/LaporanMPDW/" class="uri">https://bookdown.org/mammarsahab3/LaporanMPDW/</a></p>
+<div id="struktur-penelitian" class="section level2 unnumbered hasAnchor">
+<h2>Struktur penelitian<a href="index.html#struktur-penelitian" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Laporan ini akan membandingkan beberapa metode peralaman deret waktu untuk data harga minyak mentah. Metode tersebut akan dilatih menggunakan harga minyak mentah dari tahun 2009 sampai 2016, lalu diuji dengan meramal harga minyak mentah tahun 2017. Pembagian tersebut juga dilakukan di <span class="citation">(<a href="#ref-He2018" role="doc-biblioref">He 2018</a>)</span>, yang membandingkan model deret waktu seperti pemulusan dan ARIMA dengan model pembelajaran mesin (SVM). Berbeda dengan penelitian tersebut, penelitian ini akan menambahkan jenis pemulusan yang dipakai, serta mencoba menambahkan pengaruh peubah bebas <em>dummy</em> yang memodelkan efek hari setelah libur, peubahan struktural pada rezim harga minyak, dan lain-lain. Sekarang, penulisan laporan masih dalam tahap praproses dan eksplorasi data.</p>
+</div>
+<div id="ekstraksi-data" class="section level2 unnumbered hasAnchor">
+<h2>Ekstraksi data<a href="index.html#ekstraksi-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Dataset yang digunakan sebagai berikut. Ambil data minyak dari tahun 2000 sampai sekarang <code>Sys.Date()</code> dengam bantuan library <code>quantmod</code> <span class="citation">(<a href="#ref-R-quantmod" role="doc-biblioref">Ryan dan Ulrich 2020</a>)</span>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="index.html#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quantmod)</span>
+<span id="cb1-2"><a href="index.html#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dtplyr)</span>
+<span id="cb1-3"><a href="index.html#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-4"><a href="index.html#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-5"><a href="index.html#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="index.html#cb1-6" aria-hidden="true" tabindex="-1"></a>start <span class="ot">&lt;-</span> <span class="fu">as.POSIXct</span>(<span class="st">&quot;2000-08-23&quot;</span>)</span>
+<span id="cb1-7"><a href="index.html#cb1-7" aria-hidden="true" tabindex="-1"></a>end <span class="ot">&lt;-</span> <span class="fu">as.POSIXct</span>(<span class="fu">Sys.Date</span>())</span>
+<span id="cb1-8"><a href="index.html#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="index.html#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">getSymbols</span>(<span class="at">Symbols =</span> <span class="st">&quot;CL=F&quot;</span>,<span class="at">src =</span> <span class="st">&quot;yahoo&quot;</span>, <span class="at">from =</span> start, <span class="at">to =</span> end)</span>
+<span id="cb1-10"><a href="index.html#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="index.html#cb1-11" aria-hidden="true" tabindex="-1"></a>crude<span class="ot">&lt;-</span> <span class="fu">lazy_dt</span>(<span class="st">`</span><span class="at">CL=F</span><span class="st">`</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-12"><a href="index.html#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">X=</span><span class="fu">as.Date</span>(index,<span class="at">format=</span><span class="st">&quot;%d/%m/%Y&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">select</span>(X,<span class="st">`</span><span class="at">CL=F.Close</span><span class="st">`</span>)</span></code></pre></div>
+<p>Data tersebut merupakan harga kontrak berjangka minyak West Texas Intermediate (WTI) yang diperdangangkan di New York Mercantile Exchange (NYMEX). Peubah yang akan dimodelkan adalah harga <em>close</em>, atau harga minyak saat pasar ditutup:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="index.html#cb2-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(crude,<span class="at">n=</span><span class="dv">5</span>),</span>
+<span id="cb2-2"><a href="index.html#cb2-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Tanggal&quot;</span>,<span class="st">&quot;Harga Penutupan&quot;</span>))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Tanggal</th>
+<th align="right">Harga Penutupan</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2000-08-23</td>
+<td align="right">32.05</td>
+</tr>
+<tr class="even">
+<td align="left">2000-08-24</td>
+<td align="right">31.63</td>
+</tr>
+<tr class="odd">
+<td align="left">2000-08-25</td>
+<td align="right">32.05</td>
+</tr>
+<tr class="even">
+<td align="left">2000-08-28</td>
+<td align="right">32.87</td>
+</tr>
+<tr class="odd">
+<td align="left">2000-08-29</td>
+<td align="right">32.72</td>
+</tr>
+</tbody>
+</table>
+<p>Lakukan pembagian data. Data yang diambil selalu data terbaru karena menggunakan <code>Sys.Date()</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="index.html#cb3-1" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="ot">&lt;-</span>crude <span class="sc">%&gt;%</span> <span class="fu">filter</span>(X <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">&quot;2009-01-01&quot;</span>) <span class="sc">&amp;</span> X <span class="sc">&lt;=</span> <span class="fu">as.Date</span>(<span class="st">&quot;2017-12-31&quot;</span>))</span>
+<span id="cb3-2"><a href="index.html#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="index.html#cb3-3" aria-hidden="true" tabindex="-1"></a>crudenow  <span class="ot">&lt;-</span> crude <span class="sc">%&gt;%</span> <span class="fu">filter</span>(X <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">&quot;2017-01-01&quot;</span>) <span class="sc">&amp;</span> X <span class="sc">&lt;=</span> <span class="fu">as.Date</span>(<span class="fu">Sys.Date</span>())) <span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>()</span></code></pre></div>
+<p>Sudah diambil data yang relevan untuk diteliti.</p>
+
+</div>
+</div>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-He2018" class="csl-entry">
+He XJ. 2018. Crude Oil Prices Forecasting: Time Series vs. SVR Models. <em>Journal of International Technology and Information Management</em>. 27(2):25–42.
+</div>
+<div id="ref-R-quantmod" class="csl-entry">
+Ryan JA, Ulrich JM. 2020. <em>quantmod: Quantitative Financial Modelling Framework</em>. Ed ke-R package version 0.4.18.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+<a href="praproses-dan-eksplorasi-data.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/index.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

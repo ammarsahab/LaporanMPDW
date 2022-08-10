@@ -1,0 +1,1015 @@
+---
+title: "Results"
+format: docx
+editor: visual
+execute:
+  cache: true
+  message: false
+---
+
+```{r setup, message=FALSE}
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(RColorBrewer)
+library(smoothCV)
+library(data.table)
+library(forecast)
+library(TTR)
+```
+
+## Data Preparation
+
+Set start date to 1 January 2017 and set end date to current system date. Take crude oil price data in the specified period from Yahoo finance:
+
+```{r warning=FALSE, message=FALSE, cache=TRUE}
+start <- as.POSIXct("2017-01-01")
+end <- as.POSIXct(Sys.Date())
+
+crude_wk <- tidyquant::tq_get("CL=F", 
+                              from = start, to = end) |>
+  mutate(date = as.Date(date, format ="%d/%m/%Y"),
+         week = ISOweek::ISOweek(date))|>
+  group_by(week) |> slice_tail(n = 1) |>
+  select(date, week, close) |> ungroup()
+
+crude_wk |> head() |> 
+  kable(caption = "First five observations in the dataset") 
+```
+
+## Case the First: pre-2019
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2018-10-10")) |>
+  mutate(Split = "Train")
+testset <- crude_wk |> 
+  filter(date > as.Date("2018-10-10")) |>
+  head(4) |> mutate(Split = "Test")
+
+bind_rows(trainset,testset) |> 
+  ggplot(aes(x = date, y = close, 
+             color = Split)) +
+  geom_point() +
+  scale_color_brewer(palette="Set1") +
+  theme_minimal() +
+  xlab ("") + ylab ("") +
+  ggtitle("Crude Oil Price, pre-2019")
+```
+
+We pick a point where the weak positive trend previously established transitions into a negative trend.
+
+### Aggregation
+
+#### DES
+
+Now we optimize parameters in the training set through cross-validation, and generate an aggregation table for DES:
+
+```{r cache=TRUE, message=FALSE}
+resultsDES <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(fullset = _, 
+         initialn=12, 
+         folds = 20, 
+         "DES", 
+         alphrange=seq(0.1,1,0.1), 
+         betarange=seq(0.1,1,0.1))
+
+aggregateDES <- resultsDES[[3]] |>
+  as_tibble() |>
+  group_by(alphrange, betarange) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDES), 
+      col.names = c("$\\alpha$", "$\\beta$",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find parameters that optimize each measure:
+
+```{r cache=TRUE, results='asis'}
+params <- aggregateDES |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDES, n = 2) |>
+  purrr::map2(names(params), select, 
+            alphrange, betarange)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  paste("Parameters that minimize", 
+        titles[[p]][1], "of", titles[[p]][2]) |>
+    kable(bestparams[[p]], 
+          caption = _,
+          col.names = c(
+            paste(
+              {titles[[p]][1] |> 
+                  R.utils::capitalize()}, 
+              "of", titles[[p]][2]),
+            "$\\alpha$", "$\\beta$"))|> print(p)
+}
+```
+
+The means of all accuracy measures are all minimized by the parameters $\alpha=0.2$ and $\beta=0.2$, while the variances are all minimized by $\alpha=0.1, \beta=0.4$
+
+#### DMA
+
+```{r}
+resultsDMA <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(initialn=12, 
+         folds = 20, 
+         "DMA", 
+         start = 2,
+         end = 6, dist = 1)
+
+aggregateDMA <- resultsDMA[[3]] |>
+  as_tibble() |> group_by(M) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDMA), 
+      col.names = c("M",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find the window size $M$ that optimizes each measure:
+
+```{r}
+params <- aggregateDMA |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDMA, n = 2) |>
+  purrr::map2(names(params), select, 
+          M)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  kable(bestparams[[p]], 
+        caption = paste("Parameters that minimize",
+                        titles[[p]][1], "of",
+                        titles[[p]][2]),
+        col.names = c(
+          paste(
+            {titles[[p]][1] |> 
+                R.utils::capitalize()}, 
+            "of", titles[[p]][2]),
+          "M"))|> print(p)
+}
+```
+
+The optimal parameter seems to be $M=6$.
+
+### Comparing baselines with cross-validation
+
+We use two methods as a baseline, optimal DES smoothing and auto.arima:
+
+```{r}
+trainset |> select(close) |> 
+  stats::HoltWinters(gamma = F)
+trainset |> select(close) |> 
+  forecast::auto.arima()
+```
+
+We find that optimal smoothing uses the parameters $\alpha=1$ and $\beta\approx 0.07$, while auto.arima selects a random walk model where the prediction for future observations is based on the last observation available in the training set.
+
+```{r}
+trainset |> select(close) |> 
+  auto.arima() |> forecast() |> 
+  autoplot() +  
+  theme_minimal() +
+  xlab("") + ylab("") +
+  ggtitle("Crude oil price forecasts from ARIMA(0,1,0)")
+```
+
+Now consider accuracy:
+
+```{r message=FALSE}
+
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        forecast::auto.arima() |> 
+        predict(4) |> with(pred) |>
+        forecast::accuracy(testset$close)
+      ) |> as_tibble() |>
+      mutate(method = c("Optimal Smoothing",
+                    "Auto ARIMA")) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+Compare with the DES smoothing parameters provided by cross-validation, and DMA with $M=5$ and 6.
+
+```{r message=FALSE}
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 0.2, beta = 0.2,
+                           gamma = F) |> 
+        predict(4) |>  accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 0.1, beta = 0.4,
+                           gamma = F) |> 
+        predict(4) |> accuracy(testset$close),
+      
+       accuracy({
+        trainset |> select(close) |> 
+            smoothCV::dma.dt(m = 6,
+                             nahead = 4)}[[2]] |>
+            select(forc) |> ts(), testset$close)
+      
+      ) |> as_tibble() |>
+      mutate(method = c("Minimize means (DES)",
+                        "Minimize variance (DES)",
+                        "Optimal DMA"
+                        )) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+DES parameters that minimize variance of error measures performed best, followed by DES parameters that minimize mean of error measures. Both performed better than baseline methods and DMA. DMA at $M=6$ performed worse than auto.arima. Optimal DES performed worst.
+
+## Case the Second: COVID
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2020-01-07")) |>
+  mutate(Split = "Train")
+
+testset <- crude_wk |> 
+  filter(date > as.Date("2020-01-07")) |>  
+  mutate(Split = "Test") |> head(4)
+
+bind_rows(trainset,testset) |> 
+  ggplot(aes(x = date, y = close, 
+             color = Split)) +
+  geom_point() +
+  scale_color_brewer(palette="Set1") +
+  theme_minimal() +
+  xlab ("") + ylab ("") +
+  ggtitle("Crude Oil Price, COVID")
+```
+
+Scientists in China announced a new coronavirus in January 7, 2020. We see this leads to a sharp downward trend.
+
+### Aggregation
+
+#### DES
+
+Now we optimize parameters in the training set through cross-validation, and generate an aggregation table for DES:
+
+```{r cache=TRUE, message=FALSE}
+resultsDES <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(fullset = _, 
+         initialn= 37, 
+         folds = 30, 
+         "DES", 
+         alphrange=seq(0.1,1,0.1), 
+         betarange=seq(0.1,1,0.1))
+
+aggregateDES <- resultsDES[[3]] |>
+  as_tibble() |>
+  group_by(alphrange, betarange) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDES), 
+      col.names = c("$\\alpha$", "$\\beta$",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find parameters that optimize each measure:
+
+```{r cache=TRUE, results='asis'}
+params <- aggregateDES |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDES, n = 2) |>
+  purrr::map2(names(params), select, 
+            alphrange, betarange)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  paste("Parameters that minimize", 
+        titles[[p]][1], "of", titles[[p]][2]) |>
+    kable(bestparams[[p]], 
+          caption = _,
+          col.names = c(
+            paste(
+              {titles[[p]][1] |>
+                  R.utils::capitalize()}, 
+              "of", titles[[p]][2]
+              )
+            ,"$\\alpha$", "$\\beta$"))|> print(p)
+}
+```
+
+Mean of MSE is minimized by the parameters $\alpha=1$, $\beta-0.4$. Means of other accuracy measures are minimized by the set of parameters $\alpha=1$ and $\beta=0.3$, while the variance of all measures are minimized by the parameters $\alpha=1$ and $\beta=0.5$.
+
+#### DMA
+
+Meanwhile for DMA:
+
+```{r}
+resultsDMA <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(initialn=37, 
+         folds = 30, 
+         "DMA", 
+         start = 2,
+         end = 18, dist = 1)
+
+aggregateDMA <- resultsDMA[[3]] |>
+  as_tibble() |> group_by(M) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDMA), 
+      col.names = c("M",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find the window size $M$ that optimizes each measure:
+
+```{r results='asis'}
+params <- aggregateDMA |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDMA, n = 2) |>
+  purrr::map2(names(params), select, 
+          M)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  kable(bestparams[[p]], 
+        caption = paste("Parameters that minimize",
+                        titles[[p]][1], "of",
+                        titles[[p]][2]),
+        col.names = c(
+          paste(
+            {titles[[p]][1] |> 
+                R.utils::capitalize()}, 
+            "of", titles[[p]][2]),
+          "M"))|> print(p)
+}
+```
+
+The optimal parameter seems to be $M=2$.
+
+### Comparing baselines with cross-validation
+
+We use two methods as a baseline:
+
+```{r}
+trainset |> select(close) |>
+  auto.arima()
+trainset |> select(close) |>
+  stats::HoltWinters(gamma=F)
+```
+
+As before, auto.arima picked a random walk model. Moreover optimal smoothing picked the parameters $\alpha=1$ and $\beta\approx 0.06$
+
+```{r message=FALSE}
+
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        forecast::auto.arima() |> 
+        predict(4) |> with(pred) |>
+        forecast::accuracy(testset$close)
+      ) |> as_tibble() |>
+      mutate(method = c("Optimal Smoothing",
+                    "Auto ARIMA")) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+Compare with the DES smoothing parameters provided by cross-validation and DMA.
+
+```{r message=FALSE}
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.4,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.3,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.5,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      accuracy({
+        trainset |> select(close) |> 
+            smoothCV::dma.dt(m = 2,
+                             nahead = 4)}[[2]] |>
+            select(forc) |> ts(), testset$close)
+      
+      
+      ) |> as_tibble() |>
+      mutate(method = c("Minimize mean MSE",
+                        "Minimize mean MAPE and MAE",
+                        "Minimize variances",
+                        "Optimal DMA"
+                        )) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+Cross-validation performed worse than the baseline.
+
+## Case the Third: COVID Recovery
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2020-04-27")) |>
+  mutate(Split = "Train")
+testset <- crude_wk |> 
+  filter(date > as.Date("2020-04-27")) |>
+  head(4) |> mutate(Split = "Test")
+
+bind_rows(trainset,testset) |>
+ggplot(aes(x = date, y = close, 
+             color = Split)) +
+  geom_point() +
+  scale_color_brewer(palette="Set1") +
+  theme_minimal() +
+  xlab ("") + ylab ("") +
+  ggtitle("Crude Oil Price, COVID Recovery")
+```
+
+Saudi Arabia and Russia agreed to cut production in April 2020. However, the effect of these cuts on WTI futures price were lagged - supply needed time to adjust. Therefore, oil prices only began to rise in May. This is another area where we can experiment with smoothing.
+
+### Aggregation
+
+#### DES
+
+Now we optimize parameters in the training set through cross-validation, and generate an aggregation table:
+
+```{r cache=TRUE, message=FALSE}
+resultsDES <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(fullset = _, 
+         initialn=53, 
+         folds = 30, 
+         "DES", 
+         alphrange=seq(0.1,1,0.1), 
+         betarange=seq(0.1,1,0.1))
+
+aggregateDES <- resultsDES[[3]] |>
+  as_tibble() |>
+  group_by(alphrange, betarange) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDES), 
+      col.names = c("$\\alpha$", "$\\beta$",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find parameters that optimize each measure:
+
+```{r cache=TRUE, results='asis'}
+params <- aggregateDES |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDES, n = 2) |>
+  purrr::map2(names(params), select, 
+            alphrange, betarange)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  paste("Parameters that minimize", 
+        titles[[p]][1], "of", titles[[p]][2]) |>
+    kable(bestparams[[p]], caption = _,
+          col.names = c(
+            paste(
+              {titles[[p]][1] |> R.utils::capitalize()}, 
+              "of", titles[[p]][2]
+              )
+            ,"$\\alpha$", "$\\beta$"))|> print(p)
+}
+```
+
+Mean of MSE is minimized by the parameters $\alpha=1$ and $\beta=0.5$, mean of MAPE is minimized by the parameters $\alpha=1$ and $\beta=0.7$, and mean of MAE is minimized by the parameters $\alpha=1$ and $\beta=0.3$. The parameters $\alpha=1$ and $\beta=0.6$ minimize variance of MSE and MAE, while the parameters $\alpha=1$ and $\beta=0.9$.
+
+#### DMA
+
+Meanwhile for DMA:
+
+```{r}
+resultsDMA <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(initialn=53, 
+         folds = 30, 
+         "DMA", 
+         start = 2,
+         end = 26, dist = 1)
+
+aggregateDMA <- resultsDMA[[3]] |>
+  as_tibble() |> group_by(M) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDMA), 
+      col.names = c("M",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find the window size $M$ that optimizes each measure:
+
+```{r results='asis'}
+params <- aggregateDMA |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDMA, n = 2) |>
+  purrr::map2(names(params), select, 
+          M)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  kable(bestparams[[p]], 
+        caption = paste("Parameters that minimize",
+                        titles[[p]][1], "of",
+                        titles[[p]][2]),
+        col.names = c(
+          paste(
+            {titles[[p]][1] |> 
+                R.utils::capitalize()}, 
+            "of", titles[[p]][2]),
+          "M"))|> print(p)
+}
+```
+
+The optimal parameter seems to be $M=2$ or 6.
+
+### Comparison
+
+We use two methods as a baseline:
+
+```{r}
+trainset |> select(close) |>
+  auto.arima()
+trainset |> select(close) |>
+  stats::HoltWinters(gamma=F)
+```
+
+auto.arima picked a MA(1) model. Moreover optimal smoothing picked the parameters $\alpha=1$ and $\beta\approx 0.08$
+
+```{r message=FALSE}
+
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        forecast::auto.arima() |> 
+        predict(4) |> with(pred) |>
+        forecast::accuracy(testset$close),
+      
+      {trainset |> select(close) |>
+          naive(4) |>
+          forecast::accuracy(testset$close)
+        }[2,-(6:7)]
+      
+      ) |> as_tibble() |>
+      mutate(method = c("Optimal Smoothing",
+                    "Auto ARIMA",
+                    "Naive")) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+Compare with the DES smoothing parameters provided by cross-validation.
+
+```{r message=FALSE}
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.5,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.7,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.3,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.6,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 1, beta = 0.9,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+       accuracy({
+        trainset |> select(close) |> 
+            smoothCV::dma.dt(m = 2,
+                             nahead = 4)}[[2]] |>
+            select(forc) |> ts(), testset$close)
+      
+      ) |> as_tibble() |>
+      mutate(method = c("Minimize mean MSE",
+                        "Minimize mean MAPE",
+                        "Minimize mean MAE",
+                        "Minimize var MSE and MAE",
+                        "Minimize var MAPE",
+                        "DMA"
+                        )) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+auto.arima performed best. Cross validation by minimizing variance of MAPE performed best among all smoothing methods, DMA performed worst. Optimal smoothing performed better than all cross-validation parameters except the one that minimizies variance of MAPE. However, the performance between these models are quite close.
+
+## Case the Fourth: Vaccines
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2020-11-01")) |>
+  mutate(Split = "Train")
+testset <- crude_wk |> 
+  filter(date > as.Date("2020-11-01")) |>
+  head(4) |> mutate(Split = "Test")
+bind_rows(trainset,testset) |>
+  ggplot(aes(x = date, y = close, 
+             color = Split)) +
+  geom_point() +
+  scale_color_brewer(palette="Set1") +
+  theme_minimal() +
+  xlab ("") + ylab ("") +
+  ggtitle("Crude Oil Price, COVID Recovery")
+```
+
+Pfizer announced a COVID-19 vaccine in November 8, 2020, leading to a sharp rise in oil futures price.
+
+### Aggregation
+
+#### DES
+
+Now we optimize parameters in the training set through cross-validation, and generate an aggregation table:
+
+```{r cache=TRUE, message=FALSE}
+resultsDES <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(fullset = _, 
+         initialn=80, 
+         folds = 30, 
+         "DES", 
+         alphrange=seq(0.1,1,0.1), 
+         betarange=seq(0.1,1,0.1))
+
+aggregateDES <- resultsDES[[3]] |>
+  as_tibble() |>
+  group_by(alphrange, betarange) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDES), 
+      col.names = c("$\\alpha$", "$\\beta$",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find parameters that optimize each measure:
+
+```{r cache=TRUE, results='asis'}
+params <- aggregateDES |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDES, n = 2) |>
+  purrr::map2(names(params), select, 
+            alphrange, betarange)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  paste("Parameters that minimize", 
+        titles[[p]][1], "of", titles[[p]][2]) |>
+    kable(bestparams[[p]], caption = _,
+          col.names = c(
+            paste(
+              {titles[[p]][1] |> R.utils::capitalize()}, 
+              "of", titles[[p]][2]
+              )
+            ,"$\\alpha$", "$\\beta$"))|> print(p)
+}
+```
+
+Means of MSE and MAE are minimized by the parameters $\alpha=0.8$ and $\beta=0.1$, mean and variance of MAPE are minimized by the parameters $\alpha=0.7$ and $\beta=0.1$. Variance of MSE is minimized by $\alpha=0.4$ and $\beta=0.5$ and variance of MAE is minimized by $\alpha=0.5$ and $\beta=0.3$.
+
+#### DMA
+
+Meanwhile for DMA:
+
+```{r}
+resultsDMA <- trainset |> select(close) |>
+  as.data.table() |> 
+    fcCV(initialn=80, 
+         folds = 30, 
+         "DMA", 
+         start = 2,
+         end = 39, dist = 1)
+
+aggregateDMA <- resultsDMA[[3]] |>
+  as_tibble() |> group_by(M) |>
+  summarise(mean_MSE=mean(MSE),
+            var_MSE=var(MSE),
+            mean_MAPE=mean(MAPE),
+            var_MAPE=var(MAPE),
+            mean_MAE=mean(MAE),
+            var_MAE=var(MAE)) |>
+  ungroup()
+
+kable(head(aggregateDMA), 
+      col.names = c("M",
+                    "mean (MSE)", "variance (MSE)",
+                    "mean (MAPE)", "variance (MAPE)",
+                    "mean (MAE)", "variance (MAE)"))
+```
+
+We find the window size $M$ that optimizes each measure:
+
+```{r results='asis'}
+params <- aggregateDMA |>
+  select(mean_MSE, mean_MAPE, mean_MAE,
+         var_MSE, var_MAPE, var_MAE) 
+
+bestparams <- params |> 
+  apply(FUN = slice_min, MARGIN = 2, 
+        .data = aggregateDMA, n = 2) |>
+  purrr::map2(names(params), select, 
+          M)
+
+titles <- names(bestparams) |> 
+  stringr::str_split(pattern="_")
+
+for(p in seq(length(bestparams))){
+  kable(bestparams[[p]], 
+        caption = paste("Parameters that minimize",
+                        titles[[p]][1], "of",
+                        titles[[p]][2]),
+        col.names = c(
+          paste(
+            {titles[[p]][1] |> 
+                R.utils::capitalize()}, 
+            "of", titles[[p]][2]),
+          "M"))|> print(p)
+}
+```
+
+The optimal parameter seems to be $M=4$ or 3.
+
+### Comparison
+
+We use three methods as a baseline:
+
+```{r}
+trainset |> select(close) |>
+  auto.arima()
+trainset |> select(close) |>
+  stats::HoltWinters(gamma=F)
+```
+
+auto.arima chooses a MA(1) model. We also choose the naive method and optimal DES
+
+```{r message=FALSE}
+
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        forecast::auto.arima() |> 
+        predict(4) |> with(pred) |>
+        forecast::accuracy(testset$close),
+      
+      {trainset |> select(close) |>
+          naive(4) |>
+          forecast::accuracy(testset$close)
+        }[2,-(6:7)]
+      
+      ) |> as_tibble() |>
+      mutate(method = c("Optimal Smoothing",
+                    "Auto ARIMA",
+                    "Naive")) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+Compare with the DES smoothing parameters provided by cross-validation. Variance of MSE is minmized
+
+```{r message=FALSE}
+kable(
+  {
+    rbind(
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 0.8, beta = 0.1,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 0.7, beta = 0.1,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 0.4, beta = 0.5,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+      trainset |> select(close) |>
+        stats::HoltWinters(alpha = 0.5, beta = 0.3,
+                           gamma = F) |> 
+        predict(4) |>
+        forecast::accuracy(testset$close),
+      
+       accuracy({
+        trainset |> select(close) |> 
+            smoothCV::dma.dt(m = 4,
+                             nahead = 4)}[[2]] |>
+            select(forc) |> ts(), testset$close),
+      
+       accuracy({
+        trainset |> select(close) |> 
+            smoothCV::dma.dt(m = 3,
+                             nahead = 4)}[[2]] |>
+            select(forc) |> ts(), testset$close)
+      
+      ) |> as_tibble() |>
+      mutate(method = c("Minimize mean MSE and MAE",
+                        "Minimize mean and var MAPE",
+                        "Minimize var MSE",
+                        "Minimize var MAE",
+                        "DMA (1)",
+                        "DMA(2)"
+                        )) |>
+      tibble::remove_rownames() |> 
+      tibble::column_to_rownames(var="method")
+    },
+  col.names=c("ME", "RMSE" ,"MAE", "MPE", "MAPE"),
+  row.names=T
+  )
+```
+
+Cross-validation performed better than baseline. Surprisingly, DMA performed best.

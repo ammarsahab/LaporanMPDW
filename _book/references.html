@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>References | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</title>
+  <meta name="description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="References | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="References | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  
+  <meta name="twitter:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  
+
+<meta name="author" content="Adley Dityo Valentinus Putra (G14180009)" />
+<meta name="author" content="Muhammad Ammar Sahab (G14190020)" />
+<meta name="author" content="Putri Eka Perdanti (G14190027)" />
+<meta name="author" content="Farhan Narendra Achyara (G14190050)" />
+<meta name="author" content="Grashella Clara Nesa Br Ginting (G14190086)" />
+
+
+<meta name="date" content="2022-04-26" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="analisis-intervensi-pada-model-arima.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+
+<li class="divider"></li>
+<li><a href="index.html#pendahuluan">Pendahuluan<span></span></a>
+<ul>
+<li><a href="index.html#struktur-penelitian">Struktur penelitian<span></span></a></li>
+<li><a href="index.html#ekstraksi-data">Ekstraksi data<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html"><i class="fa fa-check"></i><b>1</b> Praproses dan Eksplorasi Data<span></span></a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#interval-waktu-data"><i class="fa fa-check"></i><b>1.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="1.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas"><i class="fa fa-check"></i><b>1.2</b> Pola-pola data dan stasioneritas<span></span></a></li>
+<li class="chapter" data-level="1.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#latar-belakang"><i class="fa fa-check"></i><b>1.3</b> Latar Belakang<span></span></a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009"><i class="fa fa-check"></i><b>1.3.1</b> Harga Minyak Mentah Tahun 2009<span></span></a></li>
+<li class="chapter" data-level="1.3.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#arab-spring"><i class="fa fa-check"></i><b>1.3.2</b> Arab Spring<span></span></a></li>
+<li class="chapter" data-level="1.3.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#shale-revolution"><i class="fa fa-check"></i><b>1.3.3</b> Shale Revolution<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural"><i class="fa fa-check"></i><b>1.4</b> Titik-titik perubahan struktural<span></span></a></li>
+<li class="chapter" data-level="1.5" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#kestastioneran"><i class="fa fa-check"></i><b>1.5</b> Kestastioneran<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html"><i class="fa fa-check"></i><b>2</b> Praproses dan Eksplorasi Data (2017-2022)<span></span></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1"><i class="fa fa-check"></i><b>2.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data"><i class="fa fa-check"></i><b>2.2</b> Plot data<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1"><i class="fa fa-check"></i><b>2.3</b> Latar Belakang<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><i class="fa fa-check"></i><b>3</b> Optimisasi Parameter Pemulusan dengan Validasi Silang<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metode"><i class="fa fa-check"></i><b>3.1</b> Metode<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-deret-waktu"><i class="fa fa-check"></i><b>3.1.1</b> Validasi Silang Deret Waktu<span></span></a></li>
+<li class="chapter" data-level="3.1.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metrik"><i class="fa fa-check"></i><b>3.1.2</b> Metrik<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#single-moving-average"><i class="fa fa-check"></i><b>3.2</b> Single Moving Average<span></span></a></li>
+<li class="chapter" data-level="3.3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-untuk-sma"><i class="fa fa-check"></i><b>3.3</b> Validasi silang untuk SMA<span></span></a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan"><i class="fa fa-check"></i><b>3.3.1</b> Kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#dma"><i class="fa fa-check"></i><b>3.4</b> DMA<span></span></a></li>
+<li class="chapter" data-level="3.5" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#ses"><i class="fa fa-check"></i><b>3.5</b> SES<span></span></a></li>
+<li class="chapter" data-level="3.6" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#des"><i class="fa fa-check"></i><b>3.6</b> DES<span></span></a></li>
+<li class="chapter" data-level="3.7" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan-1"><i class="fa fa-check"></i><b>3.7</b> Kesimpulan<span></span></a></li>
+<li class="chapter" data-level="3.8" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#addendum-last-block"><i class="fa fa-check"></i><b>3.8</b> Addendum: Last Block<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html"><i class="fa fa-check"></i><b>4</b> Analisis Intervensi pada model ARIMA<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#awal-covid"><i class="fa fa-check"></i><b>4.1</b> Awal COVID<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima"><i class="fa fa-check"></i><b>4.1.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.1.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#analisis-intervensi"><i class="fa fa-check"></i><b>4.1.2</b> Analisis intervensi<span></span></a></li>
+<li class="chapter" data-level="4.1.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#perbandingan"><i class="fa fa-check"></i><b>4.1.3</b> Perbandingan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#covid-rebuilding"><i class="fa fa-check"></i><b>4.2</b> COVID rebuilding<span></span></a></li>
+<li class="chapter" data-level="4.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#masa-sekarang"><i class="fa fa-check"></i><b>4.3</b> Masa Sekarang<span></span></a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima-1"><i class="fa fa-check"></i><b>4.3.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.3.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arimax"><i class="fa fa-check"></i><b>4.3.2</b> ARIMAX<span></span></a></li>
+<li class="chapter" data-level="4.3.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#rev-penanganan-autokorelasi"><i class="fa fa-check"></i><b>4.3.3</b> Rev: Penanganan autokorelasi<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="references" class="section level1 unnumbered hasAnchor">
+<h1>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+
+<div id="refs" class="references csl-bib-body">
+<div class="csl-entry">
+Barclay MJ, Hendershott T. 2015. Price <span>Discovery</span> and <span>Trading</span> <span>After</span> <span>Hours</span>. <em>The Review of Financial Studies</em>. 16(4):1041–1073.doi:<a href="https://doi.org/10.1093/rfs/hhg030">10.1093/rfs/hhg030</a>.
+</div>
+<div class="csl-entry">
+Block U, Hatto von Hatzfeld using an algorithm by. 2011. <em>ISOweek: Week of the year and weekday according to ISO 8601</em>. Ed ke-R package version 0.6-2.
+</div>
+<div class="csl-entry">
+Calhoun G. 2020. The <span>Saudi</span>/<span>Russia</span> <span>Oil</span> <span>Price</span> <span>War</span>: <span>Historic</span> <span>Blunder</span> #1. <em>Forbes</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.forbes.com/sites/georgecalhoun/2020/06/03/the-other-epidemic-a-cluster-of-historic-blunders---exhibit-1-the-saudirussia-oil-price-war/">https://www.forbes.com/sites/georgecalhoun/2020/06/03/the-other-epidemic-a-cluster-of-historic-blunders---exhibit-1-the-saudirussia-oil-price-war/</a>
+</div>
+<div class="csl-entry">
+Cerqueira V, Torgo L, Mozetič I. 2020. Evaluating time series forecasting models: an empirical study on performance estimation methods. <em>Machine Learning</em>. 109(11):1997–2028.doi:<a href="https://doi.org/10.1007/s10994-020-05910-7">10.1007/s10994-020-05910-7</a>. [diunduh 2022 Apr 14]. Tersedia pada: <a href="https://doi.org/10.1007/s10994-020-05910-7">https://doi.org/10.1007/s10994-020-05910-7</a>
+</div>
+<div class="csl-entry">
+Cryer JD, Chan KS. 2008. <em>Time <span>Series</span> <span>Analysis</span>: <span>With</span> <span>Applications</span> in <span>R</span></em>. Springer New York. (Springer <span>Texts</span> in <span>Statistics</span>).
+</div>
+<div class="csl-entry">
+DiChristopher T. 2018 Des. <span>US</span> crude tumbles 4.8% to 17-month low, settling at $45.88, as stock market slides. <em>CNBC</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.cnbc.com/2018/12/20/oil-markets-global-economy-crude-supply-in-focus.html">https://www.cnbc.com/2018/12/20/oil-markets-global-economy-crude-supply-in-focus.html</a>
+</div>
+<div class="csl-entry">
+Dowle M, Srinivasan A. 2021. <em>data.table: Extension of ‘data.frame‘</em>. Ed ke-R package version 1.14.2.
+</div>
+<div class="csl-entry">
+Elshendy M, Colladon AF, Battistoni E, Gloor PA. 2018. Using four different online media sources to forecast the crude oil price. <em>Journal of Information Science</em>. 44(3):408–421.doi:<a href="https://doi.org/10.1177/0165551517698298">10.1177/0165551517698298</a>.
+</div>
+<div class="csl-entry">
+Gloystein H. 2017 Des. Oil prices near 2015 highs on tight market. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL4N1OS18H">https://www.reuters.com/article/global-oil-idUSL4N1OS18H</a>
+</div>
+<div class="csl-entry">
+Gloystein H. 2017 Jan. Oil prices rise on weakening dollar, but plentiful supplies cap gains. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL4N1FG18Z">https://www.reuters.com/article/global-oil-idUSL4N1FG18Z</a>
+</div>
+<div class="csl-entry">
+Gloystein H. 2017 Jun. Oil prices fall on <span>OPEC</span> output increase, rising <span>U</span>.<span>S</span>. crude stocks. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL3N1JB05K">https://www.reuters.com/article/global-oil-idUSL3N1JB05K</a>
+</div>
+<div class="csl-entry">
+Gloystein H. 2018 Jan. Oil prices drop on uptick in <span>U</span>.<span>S</span>. production. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/global-oil-idUSL3N1PE14V">https://www.reuters.com/article/global-oil-idUSL3N1PE14V</a>
+</div>
+<div class="csl-entry">
+He XJ. 2018. Crude Oil Prices Forecasting: Time Series vs. SVR Models. <em>Journal of International Technology and Information Management</em>. 27(2):25–42.
+</div>
+<div class="csl-entry">
+Hyndman RJ, Athanasopoulos G. 2018. <em>Forecasting: Principles and Practice</em>. ed ke-2. Australia: OTexts.
+</div>
+<div class="csl-entry">
+Hyndman RJ, Athanasopoulos G. 2021. <em>Forecasting: Principles and Practice</em>. ed ke-3. Australia: OTexts.
+</div>
+<div class="csl-entry">
+Islam F. 2022. Ukraine <span>Conflict</span>: <span>Petrol</span> at <span>Fresh</span> <span>Record</span> as <span>Oil</span> and <span>Gas</span> <span>Prices</span> <span>Soar</span>. <em>BBC</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.bbc.com/news/business-60642786">https://www.bbc.com/news/business-60642786</a>
+</div>
+<div class="csl-entry">
+Kammer A, Azour J, Selassie AA, Goldfajn I, Rhee C. How <span>War</span> in <span>Ukraine</span> <span>Is</span> <span>Reverberating</span> <span>Across</span> <span>World</span>’s <span>Regions</span>. <em>IMF</em>. [diunduh 2022 Apr 10]
+</div>
+<div class="csl-entry">
+Khan M. 2014. The <span>Economic</span> <span>Consequences</span> of the <span>Arab</span> <span>Spring</span>. <em>Atlantic Council: Rafik Hariri Center for the Middle East</em>.:10.
+</div>
+<div class="csl-entry">
+Kumar DK. 2017 Jan. Oil falls on <span>China</span> concerns, down 3 percent for the week on <span>OPEC</span> doubts. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/us-global-oil-idUSKBN14X04K">https://www.reuters.com/article/us-global-oil-idUSKBN14X04K</a>
+</div>
+<div class="csl-entry">
+Kumar DK. 2019 Agu. Oil spills into <span>U</span>.<span>S</span>.-<span>China</span> trade war, prices slump. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/article/us-usa-trade-china-oil-idUSKCN1VD22D">https://www.reuters.com/article/us-usa-trade-china-oil-idUSKCN1VD22D</a>
+</div>
+<div class="csl-entry">
+Li T. 2021. The 2008 Financial Crisis and Its Effects on Gas and Oil. <em>Investopedia</em>. [diunduh 2022 Apr 7]. Tersedia pada: <a href="https://www.investopedia.com/ask/answers/052715/how-did-financial-crisis-affect-oil-and-gas-sector.asp">https://www.investopedia.com/ask/answers/052715/how-did-financial-crisis-affect-oil-and-gas-sector.asp</a>
+</div>
+<div class="csl-entry">
+Mattingly P, Liptak K, Collins K, Egan M. 2022. <span>US</span> and allies agree to release 60 million barrels of oil from their reserves as <span>Russian</span> invasion of <span>Ukraine</span> causes price spike - <span>CNNPolitics</span>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://edition.cnn.com/2022/03/01/politics/us-strategic-petroleum-reserve-release-latest/index.html">https://edition.cnn.com/2022/03/01/politics/us-strategic-petroleum-reserve-release-latest/index.html</a>
+</div>
+<div class="csl-entry">
+Mead D, Stiger P. 2015. The 2014 plunge in import petroleum prices: <span>What</span> happened? <em>Beyond the Numbers: Global Economy</em>. 4(9).
+</div>
+<div class="csl-entry">
+Meschiari S. 2022. <em>latex2exp: Use LaTeX Expressions in Plots</em>. Ed ke-R package version 0.9.4.
+</div>
+<div class="csl-entry">
+Mills A. 2020 Apr. Oil <span>ETFs</span>, <span>Contango</span> and negative oil prices. <em>Livewire Markets</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.livewiremarkets.com/wires/oil-etfs-contango-and-negative-oil-prices">https://www.livewiremarkets.com/wires/oil-etfs-contango-and-negative-oil-prices</a>
+</div>
+<div class="csl-entry">
+Montgomery DC, Jennings CL, Kulachi M. 2008. <em>Introduction to Time Series Analysis and Forecasting</em>. ed ke-2. New Jersey, United States: John Wiley; Sons Inc.
+</div>
+<div class="csl-entry">
+Moritz S, Gatscha S. 2021. <em>imputeTS: Time Series Missing Value Imputation</em>. Ed ke-R package version 3.2.
+</div>
+<div class="csl-entry">
+Oil prices fall on <span>U</span>.<span>S</span>. crude stock build, <span>Delta</span> variant spread. 2021 Agu. <em>CNBC</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.cnbc.com/2021/08/04/oil-markets-covid-delta-variant.html">https://www.cnbc.com/2021/08/04/oil-markets-covid-delta-variant.html</a>
+</div>
+<div class="csl-entry">
+Pfizer. 2020 Nov. Pfizer and <span>BioNTech</span> <span>Announce</span> <span>Vaccine</span> <span>Candidate</span> <span>Against</span> <span>COVID</span>-19 <span>Achieved</span> <span>Success</span> in <span>First</span> <span>Interim</span> <span>Analysis</span> from <span>Phase</span> 3 <span>Study</span>. <em>Business Wire</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.businesswire.com/news/home/20201109005539/en/%C2%A0Pfizer-and-BioNTech-Announce-Vaccine-Candidate-Against-COVID-19-Achieved-Success-in-First-Interim-Analysis-from-Phase-3-Study">https://www.businesswire.com/news/home/20201109005539/en/%C2%A0Pfizer-and-BioNTech-Announce-Vaccine-Candidate-Against-COVID-19-Achieved-Success-in-First-Interim-Analysis-from-Phase-3-Study</a>
+</div>
+<div class="csl-entry">
+Plumer B. 2014. Oil prices keep plummeting as <span>OPEC</span> starts a price war with the <span>US</span>. <em>Vox</em>. [diunduh 2022 Apr 7]. Tersedia pada: <a href="https://www.vox.com/2014/11/28/7302827/oil-prices-opec">https://www.vox.com/2014/11/28/7302827/oil-prices-opec</a>
+</div>
+<div class="csl-entry">
+Resnick-ault J. 2021 Des. Oil prices post weekly loss on <span>Omicron</span> uncertainty. <em>Reuters</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.reuters.com/markets/commodities/oil-heads-flat-week-omicron-uncertainty-2021-12-17/">https://www.reuters.com/markets/commodities/oil-heads-flat-week-omicron-uncertainty-2021-12-17/</a>
+</div>
+<div class="csl-entry">
+Ryan JA, Ulrich JM. 2020. <em>quantmod: Quantitative Financial Modelling Framework</em>. Ed ke-R package version 0.4.18.
+</div>
+<div class="csl-entry">
+Schnaubelt M. 2019. A comparison of machine learning model validation schemes for non-stationary time series data. FAU Discussion Papers in Economics. Report No.: 11/2019. [diunduh 2022 Apr 14]. Tersedia pada: <a href="https://www.econstor.eu/handle/10419/209136">https://www.econstor.eu/handle/10419/209136</a>
+</div>
+<div class="csl-entry">
+Stefan (https://stackoverflow.com/users/1494637/stefan). 2019. converting daily stock data to weekly-based via pandas in Python. <em>Stack Overflow</em>.
+</div>
+<div class="csl-entry">
+<span>US</span> to end sanctions waivers for <span>Iranian</span> oil imports <span>\</span>textbar <span>DW</span> <span>\</span>textbar 22.04.2019. 2019. <em>Deutsche Welle</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.dw.com/en/us-to-end-sanctions-waivers-for-iranian-oil-imports/a-48435237">https://www.dw.com/en/us-to-end-sanctions-waivers-for-iranian-oil-imports/a-48435237</a>
+</div>
+<div class="csl-entry">
+Wearden G. 2009. Oil price creeps back towards 100 a barrel. <em>The Guardian</em>. [diunduh 2022 Apr 7]. Tersedia pada: <a href="https://www.theguardian.com/business/2009/jun/10/oil-price-increase">https://www.theguardian.com/business/2009/jun/10/oil-price-increase</a>
+</div>
+<div class="csl-entry">
+Wickham H, Chang W, Henry L, Pedersen TL, Takahashi K, Wilke C, Woo K, Yutani H, Dunnington D. 2021. <em>ggplot2: Create Elegant Data Visualisations Using the Grammar of Graphics</em>. Ed ke-R package version 3.3.5.
+</div>
+<div class="csl-entry">
+Wickham H, François R, Henry L, Müller K. 2022. <em>dplyr: A Grammar of Data Manipulation</em>. Ed ke-R package version 1.0.8.
+</div>
+<div class="csl-entry">
+Woolich A, Martin D, Hunt S, Arroyo P. 2018. Sanctions <span>Update</span>: <span>US</span> sanctions on <span>Iran</span>, 8 <span>May</span> 2018. <em>Holman Fenwick Willan</em>. [diunduh 2022 Apr 10]. Tersedia pada: <a href="https://www.hfw.com/Sanctions-Update-US-sanctions-on-Iran-8-May-2018">https://www.hfw.com/Sanctions-Update-US-sanctions-on-Iran-8-May-2018</a>
+</div>
+<div class="csl-entry">
+Wuertz D, Setz T, Chalabi Y, Maechler M, Byers JW. 2018. <em>timeDate: Rmetrics - Chronological and Calendar Objects</em>. Ed ke-R package version 3043.102.
+</div>
+<div class="csl-entry">
+Zeileis A, Leisch F, Hornik K, Kleiber C. 2019. <em>strucchange: Testing, Monitoring, and Dating Structural Changes</em>. Ed ke-R package version 1.5-2.
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="analisis-intervensi-pada-model-arima.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/05-references.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

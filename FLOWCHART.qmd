@@ -1,0 +1,52 @@
+---
+title: "diagrams"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r}
+DiagrammeR::DiagrammeR("
+  graph TB
+     subgraph preprocess
+     A(get daily data)-->B(transform to weekly)
+     B --> C(train-test split)
+     end
+     subgraph crossvalidate
+     C -.-> I[pick n initial points of data]
+     I -.-> J[split the rest to 20 o4 30 folds]
+     J -.-> K[for each fold]
+     K --> L[forecast four observations using smoothing <br> with pre-set parameters]
+     L --> M[get MSE, MAE, and MAPE of forecast with <br> validation set in next fold]
+     M --> N[merge fold to training set]
+     N --> K
+     end
+     subgraph split
+     C -.- D[on Oct 10, 2018] 
+     D -.- E[on Jan 07, 2020] 
+     E -.- F[on Apr 27, 2020]
+     F -.- G[on Nov 01, 2020]
+     end
+     G -.-> C
+  ")
+```
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

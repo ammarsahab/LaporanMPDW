@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Bab 1 Praproses dan Eksplorasi Data | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</title>
+  <meta name="description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Bab 1 Praproses dan Eksplorasi Data | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Bab 1 Praproses dan Eksplorasi Data | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  
+  <meta name="twitter:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  
+
+<meta name="author" content="Adley Dityo Valentinus Putra (G14180009)" />
+<meta name="author" content="Muhammad Ammar Sahab (G14190020)" />
+<meta name="author" content="Putri Eka Perdanti (G14190027)" />
+<meta name="author" content="Farhan Narendra Achyara (G14190050)" />
+<meta name="author" content="Grashella Clara Nesa Br Ginting (G14190086)" />
+
+
+<meta name="date" content="2022-04-26" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="index.html"/>
+<link rel="next" href="praproses-dan-eksplorasi-data-2017-2022.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+
+<li class="divider"></li>
+<li><a href="index.html#pendahuluan">Pendahuluan<span></span></a>
+<ul>
+<li><a href="index.html#struktur-penelitian">Struktur penelitian<span></span></a></li>
+<li><a href="index.html#ekstraksi-data">Ekstraksi data<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html"><i class="fa fa-check"></i><b>1</b> Praproses dan Eksplorasi Data<span></span></a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#interval-waktu-data"><i class="fa fa-check"></i><b>1.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="1.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas"><i class="fa fa-check"></i><b>1.2</b> Pola-pola data dan stasioneritas<span></span></a></li>
+<li class="chapter" data-level="1.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#latar-belakang"><i class="fa fa-check"></i><b>1.3</b> Latar Belakang<span></span></a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009"><i class="fa fa-check"></i><b>1.3.1</b> Harga Minyak Mentah Tahun 2009<span></span></a></li>
+<li class="chapter" data-level="1.3.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#arab-spring"><i class="fa fa-check"></i><b>1.3.2</b> Arab Spring<span></span></a></li>
+<li class="chapter" data-level="1.3.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#shale-revolution"><i class="fa fa-check"></i><b>1.3.3</b> Shale Revolution<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural"><i class="fa fa-check"></i><b>1.4</b> Titik-titik perubahan struktural<span></span></a></li>
+<li class="chapter" data-level="1.5" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#kestastioneran"><i class="fa fa-check"></i><b>1.5</b> Kestastioneran<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html"><i class="fa fa-check"></i><b>2</b> Praproses dan Eksplorasi Data (2017-2022)<span></span></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1"><i class="fa fa-check"></i><b>2.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data"><i class="fa fa-check"></i><b>2.2</b> Plot data<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1"><i class="fa fa-check"></i><b>2.3</b> Latar Belakang<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><i class="fa fa-check"></i><b>3</b> Optimisasi Parameter Pemulusan dengan Validasi Silang<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metode"><i class="fa fa-check"></i><b>3.1</b> Metode<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-deret-waktu"><i class="fa fa-check"></i><b>3.1.1</b> Validasi Silang Deret Waktu<span></span></a></li>
+<li class="chapter" data-level="3.1.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#metrik"><i class="fa fa-check"></i><b>3.1.2</b> Metrik<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#single-moving-average"><i class="fa fa-check"></i><b>3.2</b> Single Moving Average<span></span></a></li>
+<li class="chapter" data-level="3.3" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#validasi-silang-untuk-sma"><i class="fa fa-check"></i><b>3.3</b> Validasi silang untuk SMA<span></span></a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan"><i class="fa fa-check"></i><b>3.3.1</b> Kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#dma"><i class="fa fa-check"></i><b>3.4</b> DMA<span></span></a></li>
+<li class="chapter" data-level="3.5" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#ses"><i class="fa fa-check"></i><b>3.5</b> SES<span></span></a></li>
+<li class="chapter" data-level="3.6" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#des"><i class="fa fa-check"></i><b>3.6</b> DES<span></span></a></li>
+<li class="chapter" data-level="3.7" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#kesimpulan-1"><i class="fa fa-check"></i><b>3.7</b> Kesimpulan<span></span></a></li>
+<li class="chapter" data-level="3.8" data-path="optimisasi-parameter-pemulusan-dengan-validasi-silang.html"><a href="optimisasi-parameter-pemulusan-dengan-validasi-silang.html#addendum-last-block"><i class="fa fa-check"></i><b>3.8</b> Addendum: Last Block<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html"><i class="fa fa-check"></i><b>4</b> Analisis Intervensi pada model ARIMA<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#awal-covid"><i class="fa fa-check"></i><b>4.1</b> Awal COVID<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima"><i class="fa fa-check"></i><b>4.1.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.1.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#analisis-intervensi"><i class="fa fa-check"></i><b>4.1.2</b> Analisis intervensi<span></span></a></li>
+<li class="chapter" data-level="4.1.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#perbandingan"><i class="fa fa-check"></i><b>4.1.3</b> Perbandingan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#covid-rebuilding"><i class="fa fa-check"></i><b>4.2</b> COVID rebuilding<span></span></a></li>
+<li class="chapter" data-level="4.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#masa-sekarang"><i class="fa fa-check"></i><b>4.3</b> Masa Sekarang<span></span></a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arima-1"><i class="fa fa-check"></i><b>4.3.1</b> ARIMA<span></span></a></li>
+<li class="chapter" data-level="4.3.2" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#arimax"><i class="fa fa-check"></i><b>4.3.2</b> ARIMAX<span></span></a></li>
+<li class="chapter" data-level="4.3.3" data-path="analisis-intervensi-pada-model-arima.html"><a href="analisis-intervensi-pada-model-arima.html#rev-penanganan-autokorelasi"><i class="fa fa-check"></i><b>4.3.3</b> Rev: Penanganan autokorelasi<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="praproses-dan-eksplorasi-data" class="section level1 hasAnchor" number="1">
+<h1><span class="header-section-number">Bab 1</span> Praproses dan Eksplorasi Data<a href="praproses-dan-eksplorasi-data.html#praproses-dan-eksplorasi-data" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Bagian ini akan membahas beberapa hal:</p>
+<ol style="list-style-type: decimal">
+<li>Permasalahan interval waktu data</li>
+<li>Latar belakang fluktuasi harga minyak</li>
+<li>Ekstraksi peubah <em>dummy</em> untuk memodelkan efek hari libur dan perubahan struktural</li>
+<li>Pola data time series dan kestasioneran</li>
+<li>Identifikasi model.</li>
+</ol>
+<div id="interval-waktu-data" class="section level2 hasAnchor" number="1.1">
+<h2><span class="header-section-number">1.1</span> Interval waktu data<a href="praproses-dan-eksplorasi-data.html#interval-waktu-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Dari melihat 10 tanggal pertama yang dicatat di dataset harga minyak:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="praproses-dan-eksplorasi-data.html#cb4-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(crude0917,<span class="at">n=</span><span class="dv">10</span>),</span>
+<span id="cb4-2"><a href="praproses-dan-eksplorasi-data.html#cb4-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Tanggal&quot;</span>,<span class="st">&quot;Harga Penutupan&quot;</span>))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Tanggal</th>
+<th align="right">Harga Penutupan</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2009-01-02</td>
+<td align="right">46.34</td>
+</tr>
+<tr class="even">
+<td align="left">2009-01-05</td>
+<td align="right">48.81</td>
+</tr>
+<tr class="odd">
+<td align="left">2009-01-06</td>
+<td align="right">48.58</td>
+</tr>
+<tr class="even">
+<td align="left">2009-01-07</td>
+<td align="right">42.63</td>
+</tr>
+<tr class="odd">
+<td align="left">2009-01-08</td>
+<td align="right">41.70</td>
+</tr>
+<tr class="even">
+<td align="left">2009-01-09</td>
+<td align="right">40.83</td>
+</tr>
+<tr class="odd">
+<td align="left">2009-01-12</td>
+<td align="right">37.59</td>
+</tr>
+<tr class="even">
+<td align="left">2009-01-13</td>
+<td align="right">37.78</td>
+</tr>
+<tr class="odd">
+<td align="left">2009-01-14</td>
+<td align="right">37.28</td>
+</tr>
+<tr class="even">
+<td align="left">2009-01-15</td>
+<td align="right">35.40</td>
+</tr>
+</tbody>
+</table>
+<p>Terlihat bahwa rentang waktu pengamatan data tidak sama. Misal, tidak ada pengamatan saat 1 Januari 2009 karena ada libur tahun baru. Selain itu, ada lompatan dari 2 Januari 2009 ke 5 Januari 2009. Dalam kata lain, harga minyak tidak diamati pada tanggal 3 dan 4 Januari 2009, yang merupakan akhir minggu (hari Sabtu dan Minggu). Pola yang sama terulang di data deret waktu tersebut bagi akhir minggu dan hari libur lainnya - pasar ditutup sehingga harga minyak tidak ada.</p>
+<p>Situasi ini dapat ditangani dengan tiga cara umum:</p>
+<ol style="list-style-type: decimal">
+<li>Abaikan rentang waktu harian yang tidak sama. Gunakan <em>trading days</em> atau hari kerja sebagai rentang waktu.</li>
+<li>Isi data akhir minggu dan hari libur menggunakan suatu bentuk interpolasi.</li>
+<li>Agregasikan data menjadi data mingguan, bulanan, atau tahunan.</li>
+</ol>
+<p>Cara pertama sering dipakai dalam peramalan deret waktu. Walaupun tidak ada data hari libur dan akhir minggu, nilai harian reksadana saham CREF dari tahun 2004 sampai 2006 dimodelkan dengan menggangap data tersebut memiliki rentang waktu yang sama <span class="citation">(<a href="#ref-cryer_time_2008" role="doc-biblioref">Cryer dan Chan 2008</a>)</span>. Pemodelan harga emas harian dari tahun 1985 sampai 1989 juga hanya menggunakan <em>trading days</em>. Dilakukan interpolasi, tetapi hanya untuk data hilang di <em>trading days</em> <span class="citation">(<a href="#ref-fpp2" role="doc-biblioref">Hyndman dan Athanasopoulos 2018</a>)</span>. Peramalan harga minyak <span class="citation">(<a href="#ref-fouroil" role="doc-biblioref">Elshendy <em>et al.</em> 2018</a>)</span> juga menggunakan data selama 84 hari kerja saja.</p>
+<p>Namun, juga ada justifikasi untuk interpolasi data. Interpolasi data dilakukan saat observasi tersebut dianggap memiliki nilai suatu peubah, tetapi tidak dapat diobservasi. Misal, tidak perlu melakukan interpolasi peubah gaji untuk seorang anak karena dia tidak mungkin bekerja. Dalam kasus ini, harga minyak di hari libur mungkin saja memiliki nilai. Pasar saham dan sekuritas sering mengalami <em>after-hours trading</em>; saat hal tersebut terjadi, harga berubah <span class="citation">(<a href="#ref-barclay_price_2015" role="doc-biblioref">Barclay dan Hendershott 2015</a>)</span>. Walaupun begitu, bentuk proses tersebut harus diasumsikan untuk diinterpolasi. Misal, jika menggunakan interpolasi linear, diasumsikan bahwa pergerakan harga dari hari kerja ke hari kerja lainnya di hari libur konstan. Ini belum tentu benar - mungkin saja di hari Sabtu, harga masih naik dari hari Jumat, tetapi harga turun di hari Minggu. Interpolasi linear akan mengasumsikan harga turun di Sabtu dan Minggu. Oleh karena itu, interpolasi akan menghasilkan aproksimasi kasar dari proses <em>after-hours trading</em>.</p>
+<p>Agregasi data dapat menyelesaikan masalah tersebut karena hasil agregasi dianggap memiliki rentang waktu sama. Misal, mingguan atau bulanan. Agregasi ini harus mengikuti beberapa aturan <span class="citation">(<a href="#ref-soverflow" role="doc-biblioref">Stefan 2019</a>)</span>. Untuk harga <em>opening</em>, akan diambil data harga open dari hari pertama di minggu/bulan tersebut - harga tersebut merupakan harga minyak saat pasar dibuka. Harga <em>close</em> diambil dari harga close hari terakhir di minggu/bulan tersebut - harga tersebut merupakan harga minyak saat pasar ditutup. Harga maksimum dan minimum memiliki logika yang mirip.</p>
+<p>Namun, agregasi data belum tentu menyelesaikan masalah rentang waktu tak sama. Ada beberapa bulan yang memiliki 28, 30, dan 31 hari. Ini berarti rentang pengamatan satu bulan dapat berarti beberapa jarak waktu yang berbeda. Data mingguan selalu memiliki rentang 7 hari jika data diambil dari hari yang sama di setiap minggu. Dalam kasus ini, ini berarti mengasumsikan data di hari Jumat selalu ada untuk <em>closing</em>, atau data hari Senin selalu ada. Mengingat rentang waktu yang cukup lama (8 tahun), kemungkinan besar ada data di hari-hari tersebut yang tidak ada.</p>
+<p>Dari beberapa pertimbangan tersebut, data akan dibiarkan dalam rentang waktu hari kerja. Metode ini sering dilakukan dalam penelitian dan relatif sederhana - tidak perlu dilakukan pemrosesan tambahan. Tidak perlu juga mengasumsikan struktur tertentu pada data hari libur.</p>
+<p>Namun, bisa jadi tidak adanya data hari libur tersebut membuat bias dalam model - misal, setelah hari libur biasanya ada lebih banyak pengunjung di toko-toko yang baru buka <span class="citation">(<a href="#ref-fpp2" role="doc-biblioref">Hyndman dan Athanasopoulos 2018</a>)</span>. Untuk memodelkan efek hari libur tersebut, akan dibuat variabel <em>dummy</em> di hari-hari setelah libur dan akhir minggu. Variabel ini memodelkan fakta bahwa harga di hari Senin, misal, merespon informasi dari hari Sabtu, Minggu, dan Senin, tidak Senin saja.</p>
+<p>Sebelum itu, masih ada data hilang di hari kerja yang diimputasi:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="praproses-dan-eksplorasi-data.html#cb5-1" aria-hidden="true" tabindex="-1"></a>NAs<span class="ot">&lt;-</span>crude0917<span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="st">`</span><span class="at">CL=F.Close</span><span class="st">`</span>) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">ties =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)))</span>
+<span id="cb5-2"><a href="praproses-dan-eksplorasi-data.html#cb5-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(NAs,</span>
+<span id="cb5-3"><a href="praproses-dan-eksplorasi-data.html#cb5-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">col.names=</span><span class="fu">c</span>(<span class="st">&quot;Jumlah NA&quot;</span>))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Jumlah NA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">3</td>
+</tr>
+</tbody>
+</table>
+<p>Data hilang di data latih akan tetap di-interpolasi dengan fungsi <code>na_interpolation</code> dari package <code>imputeTS</code> <span class="citation">(<a href="#ref-R-imputeTS" role="doc-biblioref">Moritz dan Gatscha 2021</a>)</span>. Akan digunakan interpolasi default, yaitu interpolasi linear dengan rumus umum:</p>
+<p><span class="math display">\[
+y=y_{1}+(x-x_1)\frac{y_{2}-y_{1}}{x_{2}-x_{1}}
+\]</span></p>
+<p>Jika dimiliki dua titik, dan hendak diduga nilai dari suatu titik di antara dua titik tersebut:</p>
+<p><span class="math display">\[
+\begin{aligned}
+x_{1}&amp;: \text{ Waktu pada titik ke-1}\\
+y_{1}&amp;: \text{ Harga minyak pada titik ke-1}\\
+x_{2}&amp;: \text{ Waktu pada titik ke-2}\\
+y_{2}&amp;: \text{ Harga minyak pada titik ke-2}\\
+x&amp;: \text{ Waktu pada titik yang ingin diketahui}\\
+y&amp;: \text{ Harga minyak pada titik yang ingin diketahui}\\
+\end{aligned}
+\]</span></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="praproses-dan-eksplorasi-data.html#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(imputeTS)</span></code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;imputeTS&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:zoo&#39;:
+## 
+##     na.locf</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="praproses-dan-eksplorasi-data.html#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#interpolasi</span></span>
+<span id="cb9-2"><a href="praproses-dan-eksplorasi-data.html#cb9-2" aria-hidden="true" tabindex="-1"></a>crude0917<span class="ot">&lt;-</span> crude0917 <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">fixed =</span> <span class="fu">na_interpolation</span>(<span class="st">`</span><span class="at">CL=F.Close</span><span class="st">`</span>))</span>
+<span id="cb9-3"><a href="praproses-dan-eksplorasi-data.html#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="praproses-dan-eksplorasi-data.html#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot_na_imputations</span>(<span class="fu">pull</span>(crude0917,<span class="st">`</span><span class="at">CL=F.Close</span><span class="st">`</span>),</span>
+<span id="cb9-5"><a href="praproses-dan-eksplorasi-data.html#cb9-5" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">pull</span>(crude0917,fixed))</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-360-1.png" width="672" /></p>
+<p>Untuk mengekstraksi peubah <em>dummy</em> yang memodelkan efek hari setelah libur, buat sederet data yang berisi semua hari dari tahun 2009 sampai 2017, lalu merge:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="praproses-dan-eksplorasi-data.html#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lazy_dt</span>(<span class="fu">seq</span>(<span class="fu">as.Date</span>(<span class="st">&quot;2009-01-01&quot;</span>), <span class="fu">as.Date</span>(<span class="st">&quot;2017-12-31&quot;</span>), <span class="at">by=</span><span class="st">&quot;days&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="praproses-dan-eksplorasi-data.html#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">X=</span>x) <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(crude0917) <span class="sc">%&gt;%</span> <span class="fu">select</span>(fixed) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-3"><a href="praproses-dan-eksplorasi-data.html#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">ties =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.))) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">col.names =</span> <span class="st">&quot;Jumlah NA&quot;</span>)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Jumlah NA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1021</td>
+</tr>
+</tbody>
+</table>
+<p>Terdapat 1021 data hilang. Buat deret hari akhir minggu dari tahun 2009 sampai 2017. Hari Sabtu pertama di dataset ini adalah Januari 3, 2009:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="praproses-dan-eksplorasi-data.html#cb11-1" aria-hidden="true" tabindex="-1"></a>sats<span class="ot">&lt;-</span><span class="fu">seq</span>(<span class="fu">as.Date</span>(<span class="st">&quot;2009-01-03&quot;</span>), <span class="fu">as.Date</span>(<span class="st">&quot;2017-12-31&quot;</span>), <span class="at">by=</span><span class="st">&quot;weeks&quot;</span>)</span>
+<span id="cb11-2"><a href="praproses-dan-eksplorasi-data.html#cb11-2" aria-hidden="true" tabindex="-1"></a>suns<span class="ot">&lt;-</span><span class="fu">seq</span>(<span class="fu">as.Date</span>(<span class="st">&quot;2009-01-04&quot;</span>), <span class="fu">as.Date</span>(<span class="st">&quot;2017-12-31&quot;</span>), <span class="at">by=</span><span class="st">&quot;weeks&quot;</span>)</span>
+<span id="cb11-3"><a href="praproses-dan-eksplorasi-data.html#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">c</span>(sats,suns))</span></code></pre></div>
+<pre><code>## [1] 940</code></pre>
+<p>Ada 940 hari yang merupakan akhir minggu dari 1024 hari libur. Untuk mendapat data hari libur nasional di bursa saham New York, gunakan fungsi <code>holidayNYSE</code> dari package <code>timeDate</code> <span class="citation">(<a href="#ref-R-timeDate" role="doc-biblioref">Wuertz <em>et al.</em> 2018</a>)</span>.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="praproses-dan-eksplorasi-data.html#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(timeDate)</span></code></pre></div>
+<pre><code>## 
+## Attaching package: &#39;timeDate&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:TSA&#39;:
+## 
+##     kurtosis, skewness</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="praproses-dan-eksplorasi-data.html#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">as.Date</span>(<span class="fu">holidayNYSE</span>(<span class="at">year=</span><span class="fu">seq</span>(<span class="dv">2009</span>,<span class="dv">2017</span>,<span class="dv">1</span>))))</span></code></pre></div>
+<pre><code>## [1] 80</code></pre>
+<p>Terlihat bahwa 1020 dari data hilang dapat dijelaskan oleh libur nasional dan akhir minggu. Hanya 1 dari data hilang yang tidak dapat dijelaskan. Buat deret hari Senin dari tahun 2009 sampai 2017, dan hari setelah hari libur nasional. Gunakan package dplyr <span class="citation">(<a href="#ref-R-dplyr" role="doc-biblioref">Wickham <em>et al.</em> 2022</a>)</span> untuk menghasilkan data.frame tersebut:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="praproses-dan-eksplorasi-data.html#cb18-1" aria-hidden="true" tabindex="-1"></a>mons<span class="ot">&lt;-</span><span class="fu">lazy_dt</span>(suns<span class="sc">+</span><span class="dv">1</span>)<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">dumMon=</span><span class="dv">1</span>)</span>
+<span id="cb18-2"><a href="praproses-dan-eksplorasi-data.html#cb18-2" aria-hidden="true" tabindex="-1"></a>posthol<span class="ot">&lt;-</span><span class="fu">lazy_dt</span>(<span class="fu">as.Date</span>(<span class="fu">holidayNYSE</span>(<span class="at">year=</span><span class="fu">seq</span>(<span class="dv">2009</span>,<span class="dv">2017</span>,<span class="dv">1</span>)))<span class="sc">+</span><span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="praproses-dan-eksplorasi-data.html#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x=</span>x<span class="sc">+</span><span class="dv">1</span>,</span>
+<span id="cb18-4"><a href="praproses-dan-eksplorasi-data.html#cb18-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">dumHol=</span><span class="dv">1</span>)</span></code></pre></div>
+<p>Lalu, merge data crude dengan data hari Senin dan hari setelah libur nasional.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="praproses-dan-eksplorasi-data.html#cb19-1" aria-hidden="true" tabindex="-1"></a>crudeDummies<span class="ot">&lt;-</span> crude0917<span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="praproses-dan-eksplorasi-data.html#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(mons,<span class="at">by=</span><span class="fu">c</span>(<span class="st">&#39;X&#39;</span><span class="ot">=</span><span class="st">&#39;x&#39;</span>)) <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(posthol,<span class="at">by=</span><span class="fu">c</span>(<span class="st">&#39;X&#39;</span><span class="ot">=</span><span class="st">&#39;x&#39;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="praproses-dan-eksplorasi-data.html#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dumMon=</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(dumMon),<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb19-4"><a href="praproses-dan-eksplorasi-data.html#cb19-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">dumHol=</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(dumHol),<span class="dv">0</span>,<span class="dv">1</span>))</span></code></pre></div>
+<p>Peubah <em>dummy</em> untuk memodelkan efek pasar dibuka saat hari senin dan setelah libur telah dibuat. Peubah tersebut sebenarnya tidak terlalu berkorelasi dengan harga minyak, jadi mungkin saja efek-efek tersebut tidak ada:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="praproses-dan-eksplorasi-data.html#cb20-1" aria-hidden="true" tabindex="-1"></a>crudeDummies <span class="sc">%&gt;%</span> </span>
+<span id="cb20-2"><a href="praproses-dan-eksplorasi-data.html#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">corHol=</span><span class="fu">cor</span>(dumHol,fixed),</span>
+<span id="cb20-3"><a href="praproses-dan-eksplorasi-data.html#cb20-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">corMon=</span><span class="fu">cor</span>(dumMon,fixed)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-4"><a href="praproses-dan-eksplorasi-data.html#cb20-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&quot;Senin&quot;</span>, <span class="st">&quot;Liburan&quot;</span>),</span>
+<span id="cb20-5"><a href="praproses-dan-eksplorasi-data.html#cb20-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">caption =</span> <span class="st">&quot;Korelasi peubah dummy dengan harga minyak&quot;</span>)</span></code></pre></div>
+<table>
+<caption><span id="tab:unnamed-chunk-366">Table 1.1: </span>Korelasi peubah dummy dengan harga minyak</caption>
+<thead>
+<tr class="header">
+<th align="right">Senin</th>
+<th align="right">Liburan</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.0038625</td>
+<td align="right">-0.0022236</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="pola-pola-data-dan-stasioneritas" class="section level2 hasAnchor" number="1.2">
+<h2><span class="header-section-number">1.2</span> Pola-pola data dan stasioneritas<a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Plot dari data tersebut dibuat menggunakan <code>ggplot2</code> <span class="citation">(<a href="#ref-R-ggplot2" role="doc-biblioref">Wickham <em>et al.</em> 2021</a>)</span>:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="praproses-dan-eksplorasi-data.html#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb21-2"><a href="praproses-dan-eksplorasi-data.html#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="praproses-dan-eksplorasi-data.html#cb21-3" aria-hidden="true" tabindex="-1"></a>data.table<span class="sc">::</span><span class="fu">as.data.table</span>(crude0917) <span class="sc">%&gt;%</span></span>
+<span id="cb21-4"><a href="praproses-dan-eksplorasi-data.html#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X, <span class="at">y=</span>fixed)) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="praproses-dan-eksplorasi-data.html#cb21-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_line</span>()<span class="sc">+</span></span>
+<span id="cb21-6"><a href="praproses-dan-eksplorasi-data.html#cb21-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close) - USD/Barrel&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb21-7"><a href="praproses-dan-eksplorasi-data.html#cb21-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-367-1.png" width="672" /></p>
+<p>Terlihat bahwa data memiliki pola campuran. Secara kasar, terlihat tren naik pada tahun 2009-2011. Lalu, dari tahun 2011-2014 harga minyak siklik, tetapi rataannya tetap, kira-kira di atas 75 dolar. Harga minyak turun drastis dari tahun 2014-2016. Terakhir, harga minyak naik sedikit lalu stasioner lalu naik sedikit lagi di tahun 2016-2018. Pola-pola tersebut dapat dilihat setelah dilakukan segmentasi melalui <code>dplyr</code> <span class="citation">(<a href="#ref-R-dplyr" role="doc-biblioref">Wickham <em>et al.</em> 2022</a>)</span>. Segmentasi tersebut tidak dilakukan menggunakan metode formal, tetapi secara eksploratif saja:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="praproses-dan-eksplorasi-data.html#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb22-2"><a href="praproses-dan-eksplorasi-data.html#cb22-2" aria-hidden="true" tabindex="-1"></a>cbbPalette <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;#000000&quot;</span>, <span class="st">&quot;#E69F00&quot;</span>, <span class="st">&quot;#56B4E9&quot;</span>, <span class="st">&quot;#009E73&quot;</span>, </span>
+<span id="cb22-3"><a href="praproses-dan-eksplorasi-data.html#cb22-3" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;#F0E442&quot;</span>, <span class="st">&quot;#0072B2&quot;</span>, <span class="st">&quot;#D55E00&quot;</span>, <span class="st">&quot;#CC79A7&quot;</span>)</span>
+<span id="cb22-4"><a href="praproses-dan-eksplorasi-data.html#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co">#palet yang inklusif pada buta warna</span></span>
+<span id="cb22-5"><a href="praproses-dan-eksplorasi-data.html#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="praproses-dan-eksplorasi-data.html#cb22-6" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="praproses-dan-eksplorasi-data.html#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Segmen=</span></span>
+<span id="cb22-8"><a href="praproses-dan-eksplorasi-data.html#cb22-8" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-12-31&#39;</span>),<span class="st">&quot;1&quot;</span>,</span>
+<span id="cb22-9"><a href="praproses-dan-eksplorasi-data.html#cb22-9" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2014-06-01&#39;</span>),<span class="st">&quot;2&quot;</span>,</span>
+<span id="cb22-10"><a href="praproses-dan-eksplorasi-data.html#cb22-10" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2016-01-01&#39;</span>),<span class="st">&quot;3&quot;</span>,<span class="st">&quot;4&quot;</span>)))<span class="co">#buat segmentasi </span></span>
+<span id="cb22-11"><a href="praproses-dan-eksplorasi-data.html#cb22-11" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>()<span class="sc">%&gt;%</span></span>
+<span id="cb22-12"><a href="praproses-dan-eksplorasi-data.html#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb22-13"><a href="praproses-dan-eksplorasi-data.html#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span>Segmen))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>cbbPalette)<span class="sc">+</span></span>
+<span id="cb22-14"><a href="praproses-dan-eksplorasi-data.html#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">&quot;Segmentasi Harga Minyak (CL.F Close) - USD/Barrel&quot;</span>)<span class="sc">+</span></span>
+<span id="cb22-15"><a href="praproses-dan-eksplorasi-data.html#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span><span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-368-1.png" width="672" /></p>
+<p>Namun, sebenarnya segmentasi ini belum terlalu detail. Misal, sebenarnya harga minyak naik dari tahun 2009 ke 2010, lalu mengalami pola siklik dari tahun 2010 ke 2011. Kekasasaran segmentasi ini dapat dilihat dari boxplot. Masih banyak titik-titik yang di luar garis (whisker), yang menandandakan ada banyak amatan ekstrim:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="praproses-dan-eksplorasi-data.html#cb23-1" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="praproses-dan-eksplorasi-data.html#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Segmen=</span></span>
+<span id="cb23-3"><a href="praproses-dan-eksplorasi-data.html#cb23-3" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-12-31&#39;</span>),<span class="st">&quot;1&quot;</span>,</span>
+<span id="cb23-4"><a href="praproses-dan-eksplorasi-data.html#cb23-4" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2014-06-01&#39;</span>),<span class="st">&quot;2&quot;</span>,</span>
+<span id="cb23-5"><a href="praproses-dan-eksplorasi-data.html#cb23-5" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2016-01-01&#39;</span>),<span class="st">&quot;3&quot;</span>,<span class="st">&quot;4&quot;</span>)))<span class="co">#buat segmentasi </span></span>
+<span id="cb23-6"><a href="praproses-dan-eksplorasi-data.html#cb23-6" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>()<span class="sc">%&gt;%</span></span>
+<span id="cb23-7"><a href="praproses-dan-eksplorasi-data.html#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb23-8"><a href="praproses-dan-eksplorasi-data.html#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>(<span class="fu">aes</span>(<span class="at">fill=</span>Segmen))<span class="sc">+</span><span class="fu">scale_fill_manual</span>(<span class="at">values=</span>cbbPalette)<span class="sc">+</span></span>
+<span id="cb23-9"><a href="praproses-dan-eksplorasi-data.html#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span><span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-369-1.png" width="672" /></p>
+<p>Selain detail pertama yang disebutkan di atas, terlihat bahwa di penurunan harga minyak tahun 2014-2016, sempat ada kenaikan sedikit lalu turun lagi. Dengan menambahkan segmen-segmen tersebut, segmentasi yang detail adalah:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="praproses-dan-eksplorasi-data.html#cb24-1" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="praproses-dan-eksplorasi-data.html#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Segmen=</span></span>
+<span id="cb24-3"><a href="praproses-dan-eksplorasi-data.html#cb24-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2009-10-01&#39;</span>),<span class="st">&quot;1&quot;</span>,</span>
+<span id="cb24-4"><a href="praproses-dan-eksplorasi-data.html#cb24-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-10-31&#39;</span>),<span class="st">&quot;2&quot;</span>,</span>
+<span id="cb24-5"><a href="praproses-dan-eksplorasi-data.html#cb24-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2014-06-30&#39;</span>),<span class="st">&quot;3&quot;</span>,</span>
+<span id="cb24-6"><a href="praproses-dan-eksplorasi-data.html#cb24-6" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2015-02-01&#39;</span>),<span class="st">&quot;4&quot;</span>,</span>
+<span id="cb24-7"><a href="praproses-dan-eksplorasi-data.html#cb24-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2016-05-01&#39;</span>),<span class="st">&quot;6&quot;</span>,<span class="st">&quot;7&quot;</span>)</span>
+<span id="cb24-8"><a href="praproses-dan-eksplorasi-data.html#cb24-8" aria-hidden="true" tabindex="-1"></a>          ))))<span class="co">#buat segmentasi </span></span>
+<span id="cb24-9"><a href="praproses-dan-eksplorasi-data.html#cb24-9" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb24-10"><a href="praproses-dan-eksplorasi-data.html#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb24-11"><a href="praproses-dan-eksplorasi-data.html#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span>Segmen))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>cbbPalette)<span class="sc">+</span></span>
+<span id="cb24-12"><a href="praproses-dan-eksplorasi-data.html#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Segmentasi Detail Harga Minyak (CL.F Close) - USD/Barrel&quot;</span>)<span class="sc">+</span></span>
+<span id="cb24-13"><a href="praproses-dan-eksplorasi-data.html#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb24-14"><a href="praproses-dan-eksplorasi-data.html#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-370-1.png" width="672" /></p>
+<p>Dapat dilihat dari boxplot per kelompok segmentasi tersebut bahwa sama sekali tidak ada amatan ekstrim yang menandakan bahwa pengelompokan sudah baik.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="praproses-dan-eksplorasi-data.html#cb25-1" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="praproses-dan-eksplorasi-data.html#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Segmen=</span></span>
+<span id="cb25-3"><a href="praproses-dan-eksplorasi-data.html#cb25-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2009-10-01&#39;</span>),<span class="st">&quot;1&quot;</span>,</span>
+<span id="cb25-4"><a href="praproses-dan-eksplorasi-data.html#cb25-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-10-31&#39;</span>),<span class="st">&quot;2&quot;</span>,</span>
+<span id="cb25-5"><a href="praproses-dan-eksplorasi-data.html#cb25-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2014-06-30&#39;</span>),<span class="st">&quot;3&quot;</span>,</span>
+<span id="cb25-6"><a href="praproses-dan-eksplorasi-data.html#cb25-6" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2015-02-01&#39;</span>),<span class="st">&quot;4&quot;</span>,</span>
+<span id="cb25-7"><a href="praproses-dan-eksplorasi-data.html#cb25-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2016-05-01&#39;</span>),<span class="st">&quot;6&quot;</span>,<span class="st">&quot;7&quot;</span>)</span>
+<span id="cb25-8"><a href="praproses-dan-eksplorasi-data.html#cb25-8" aria-hidden="true" tabindex="-1"></a>          ))))<span class="co">#buat segmentasi </span></span>
+<span id="cb25-9"><a href="praproses-dan-eksplorasi-data.html#cb25-9" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb25-10"><a href="praproses-dan-eksplorasi-data.html#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb25-11"><a href="praproses-dan-eksplorasi-data.html#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="fu">aes</span>(<span class="at">fill=</span>Segmen))<span class="sc">+</span><span class="fu">scale_fill_manual</span>(<span class="at">values=</span>cbbPalette)<span class="sc">+</span></span>
+<span id="cb25-12"><a href="praproses-dan-eksplorasi-data.html#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot per Segmen Harga Minyak (CL.F Close)&quot;</span>)<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb25-13"><a href="praproses-dan-eksplorasi-data.html#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-371-1.png" width="672" /></p>
+</div>
+<div id="latar-belakang" class="section level2 hasAnchor" number="1.3">
+<h2><span class="header-section-number">1.3</span> Latar Belakang<a href="praproses-dan-eksplorasi-data.html#latar-belakang" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Variasi dari segmen tersebut dapat dijelaskan dengan beberapa faktor perubahan harga minyak, yaitu perubahan penawaran dan permintaan minyak mentah karena konflik yang melibatkan negara-negara penghasil minyak dan krisis ekonomi yang melanda negara-negara besar.</p>
+<div id="harga-minyak-mentah-tahun-2009" class="section level3 hasAnchor" number="1.3.1">
+<h3><span class="header-section-number">1.3.1</span> Harga Minyak Mentah Tahun 2009<a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Harga minyak pada awal 2009 sangat rendah karena efek krisis finansial yang melanda Amerika Serikat dan Eropa pada tahun 2008. Krisis finansial tersebut terjadi karena krisis pinjaman kredit yang terjadi di Amerika Serikat. Akibatnya, berbagai bank di Amerika Serikat bangkrut dan ekonomi dunia melemah. Setelah itu, permintaan minyak mentah juga melemah (karena minyak merupakan input besar di ekonomi dunia) dan harga minyak mentah turun dari titik tertinggi, yaitu 133.88 USD pada Juni 2008 ke 39.09 USD per barrel pada Februari 2009 <span class="citation">(<a href="#ref-tlioil" role="doc-biblioref">Li 2021</a>)</span>.</p>
+<p>Pemerintah Amerika Serikat memberikan respons terhadap krisis tersebut dengan memberikan stimulus kepada pasar finansial seperti bank yang mengalami krisis keuangan. Akhirnya, ekonomi pada pertengahan 2009 mulai pulih dan permintaan minyak mentah meningkat kembali menjadi sekitar 70 USD per barrel pada Juni 2009 <span class="citation">(<a href="#ref-guardoil" role="doc-biblioref">Wearden 2009</a>)</span>. Terlihat bahwa dari periode Januari 2009 sampai Desember 2010, harga kontrak berjangka minyak naik:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="praproses-dan-eksplorasi-data.html#cb26-1" aria-hidden="true" tabindex="-1"></a>highlightPalette<span class="ot">&lt;-</span><span class="fu">c</span>( <span class="st">&quot;#56B4E9&quot;</span>,<span class="st">&quot;#D55E00&quot;</span>,<span class="st">&quot;#D3D3D3&quot;</span>)</span>
+<span id="cb26-2"><a href="praproses-dan-eksplorasi-data.html#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="praproses-dan-eksplorasi-data.html#cb26-3" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="praproses-dan-eksplorasi-data.html#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Keterangan=</span></span>
+<span id="cb26-5"><a href="praproses-dan-eksplorasi-data.html#cb26-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2009-06-01&#39;</span>),</span>
+<span id="cb26-6"><a href="praproses-dan-eksplorasi-data.html#cb26-6" aria-hidden="true" tabindex="-1"></a>                 <span class="st">&quot;Jan 2009 - Jun 2009 (Pemulihan Harga)&quot;</span>,</span>
+<span id="cb26-7"><a href="praproses-dan-eksplorasi-data.html#cb26-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-12-17&#39;</span>),</span>
+<span id="cb26-8"><a href="praproses-dan-eksplorasi-data.html#cb26-8" aria-hidden="true" tabindex="-1"></a>                 <span class="st">&quot;Harga Stabil Sebelum Arab Spring&quot;</span>,</span>
+<span id="cb26-9"><a href="praproses-dan-eksplorasi-data.html#cb26-9" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;Lainnya&quot;</span>))<span class="co">#buat segmentasi </span></span>
+<span id="cb26-10"><a href="praproses-dan-eksplorasi-data.html#cb26-10" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb26-11"><a href="praproses-dan-eksplorasi-data.html#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb26-12"><a href="praproses-dan-eksplorasi-data.html#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span>Keterangan))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb26-13"><a href="praproses-dan-eksplorasi-data.html#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak Setelah Krisis 2008&quot;</span>)<span class="sc">+</span></span>
+<span id="cb26-14"><a href="praproses-dan-eksplorasi-data.html#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb26-15"><a href="praproses-dan-eksplorasi-data.html#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-372-1.png" width="672" /></p>
+</div>
+<div id="arab-spring" class="section level3 hasAnchor" number="1.3.2">
+<h3><span class="header-section-number">1.3.2</span> Arab Spring<a href="praproses-dan-eksplorasi-data.html#arab-spring" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Peristiwa “Arab Spring” merupakan peristiwa politik yang terjadi di negara-negara Arab, seperti Mesir, Libya, Tunisia, dan lain-lain. Peristiwa tersebut dimulai sejak awal tahun 2011 yang menjadi titik awal perubahan sistem tatanan politik yang demokratis di negara-negara tersebut. Arab Spring memberikan implikasi penting terhadap pasar minyak internasional <span class="citation">(<a href="#ref-khan_economic_2014" role="doc-biblioref">Khan 2014</a>)</span>. Konflik yang terjadi negara-negara Arab tersebut (yang merupakan pengekspor minyak terbesar) yang mengganggu proses produksi dan ekspor minyak dan gas bahkan turun sampai nol. Turunnya produksi tersebut yang biasanya menyumbang 5% dari produksi global mengakibatkan harga naik di seluruh dunia. Oleh karena itu, harga minyak siklik di atas 75 dolar per barrel pada waktu tersebut.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="praproses-dan-eksplorasi-data.html#cb27-1" aria-hidden="true" tabindex="-1"></a>highlightPalette<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;#56B4E9&quot;</span>,<span class="st">&quot;#D3D3D3&quot;</span>,<span class="st">&quot;#D3D3D3&quot;</span>)</span>
+<span id="cb27-2"><a href="praproses-dan-eksplorasi-data.html#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="praproses-dan-eksplorasi-data.html#cb27-3" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="praproses-dan-eksplorasi-data.html#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Keterangan=</span></span>
+<span id="cb27-5"><a href="praproses-dan-eksplorasi-data.html#cb27-5" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-12-17&#39;</span>), <span class="st">&quot;Sebelum Arab Spring&quot;</span>,</span>
+<span id="cb27-6"><a href="praproses-dan-eksplorasi-data.html#cb27-6" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2012-12-31&#39;</span>),<span class="st">&quot;Arab Spring&quot;</span>,</span>
+<span id="cb27-7"><a href="praproses-dan-eksplorasi-data.html#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;Lainnya&quot;</span>))<span class="co">#buat segmentasi </span></span>
+<span id="cb27-8"><a href="praproses-dan-eksplorasi-data.html#cb27-8" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb27-9"><a href="praproses-dan-eksplorasi-data.html#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb27-10"><a href="praproses-dan-eksplorasi-data.html#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span>Keterangan))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb27-11"><a href="praproses-dan-eksplorasi-data.html#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak saat Arab Spring&quot;</span>)<span class="sc">+</span></span>
+<span id="cb27-12"><a href="praproses-dan-eksplorasi-data.html#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb27-13"><a href="praproses-dan-eksplorasi-data.html#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-373-1.png" width="672" /></p>
+<p>Selain ketidakstabilan yang disebabkan Arab Spring, pertumbuhan ekonomi di Tiongkok meningkatkan permintaan minyak sehingga terdapat tekanan dalam permintaan dan penawaran untuk meningatkan harga minyak <span class="citation">(<a href="#ref-voxoil" role="doc-biblioref">Plumer 2014</a>)</span>.</p>
+</div>
+<div id="shale-revolution" class="section level3 hasAnchor" number="1.3.3">
+<h3><span class="header-section-number">1.3.3</span> Shale Revolution<a href="praproses-dan-eksplorasi-data.html#shale-revolution" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>“Shale Revolution” mengacu pada kombinasi rekahan hidrolik dan pengeboran horizontal yang memungkinkan Amerika Serikat untuk secara signifikan meningkatkan produksi minyak dan gas alamnya, terutama dari formasi minyak ketat, yang sekarang mencapai 36% dari total produksi minyak mentah AS. Kapasitas produksi baru ini telah mengurangi ketergantungan Amerika Serikat pada impor minyak dari luar negeri dan terus memberikan dorongan ekonomi yang penting saat negara itu pulih dari resesi 2008. Minyak dan gas merupakan 1,6% dari PDB Amerika Serikat pada tahun 2011 dan terus berkembang. Perkembangan formasi serpih telah berkorelasi dengan peningkatan lapangan kerja, dengan industri minyak dan gas menambahkan 169.000 pekerjaan antara 2010 dan 2012.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="praproses-dan-eksplorasi-data.html#cb28-1" aria-hidden="true" tabindex="-1"></a>highlightPalette<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;#D3D3D3&quot;</span>,<span class="st">&quot;#D3D3D3&quot;</span>,<span class="st">&quot;#56B4E9&quot;</span>)</span>
+<span id="cb28-2"><a href="praproses-dan-eksplorasi-data.html#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="praproses-dan-eksplorasi-data.html#cb28-3" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span></span>
+<span id="cb28-4"><a href="praproses-dan-eksplorasi-data.html#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Keterangan=</span></span>
+<span id="cb28-5"><a href="praproses-dan-eksplorasi-data.html#cb28-5" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2014-01-01&#39;</span>), <span class="st">&quot;Sebelum Shale Revolution&quot;</span>,</span>
+<span id="cb28-6"><a href="praproses-dan-eksplorasi-data.html#cb28-6" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(X<span class="sc">&lt;=</span><span class="fu">as.Date</span>(<span class="st">&#39;2016-01-01&#39;</span>),<span class="st">&quot;Shale Revolution&quot;</span>,</span>
+<span id="cb28-7"><a href="praproses-dan-eksplorasi-data.html#cb28-7" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">&quot;Setelah Shale Revolution&quot;</span>))</span>
+<span id="cb28-8"><a href="praproses-dan-eksplorasi-data.html#cb28-8" aria-hidden="true" tabindex="-1"></a>         <span class="co">#buat segmentasi </span></span>
+<span id="cb28-9"><a href="praproses-dan-eksplorasi-data.html#cb28-9" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">%&gt;%</span>data.table<span class="sc">::</span><span class="fu">as.data.table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb28-10"><a href="praproses-dan-eksplorasi-data.html#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X,<span class="at">y=</span>fixed))<span class="sc">+</span></span>
+<span id="cb28-11"><a href="praproses-dan-eksplorasi-data.html#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color=</span>Keterangan))<span class="sc">+</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>highlightPalette)<span class="sc">+</span></span>
+<span id="cb28-12"><a href="praproses-dan-eksplorasi-data.html#cb28-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Penurunan Harga Minyak 2014-2016&quot;</span>)<span class="sc">+</span></span>
+<span id="cb28-13"><a href="praproses-dan-eksplorasi-data.html#cb28-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)<span class="sc">+</span></span>
+<span id="cb28-14"><a href="praproses-dan-eksplorasi-data.html#cb28-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-374-1.png" width="672" /></p>
+<p>Perkembangan industri minyak dan gas tersebut meningkatkan produksi minyak dunia. Selain itu, negara-negara produsen minyak di OPEC mempertahankan atau meningkatkan produksi minyak mentah yang. Permintaan minyak di beberapa negara seperti Tiongkok dan di Uni Eropa juga menurun, sehingga faktor-faktor tersebut menurunkan harga minyak pada periode 2014-2016. Harga minyak mentah dunia mengalami penurunan pada akhir tahun 2014 dari US$100 per barel hingga US$40 per barel pada tahun 2016 dan mulai naik pada tahun 2017 <span class="citation">(<a href="#ref-mead_2014_2015" role="doc-biblioref">Mead dan Stiger 2015</a>)</span>.</p>
+</div>
+</div>
+<div id="titik-titik-perubahan-struktural" class="section level2 hasAnchor" number="1.4">
+<h2><span class="header-section-number">1.4</span> Titik-titik perubahan struktural<a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Secara lebih formal, dapat dicari titik-titik perubahan struktural di deret waktu tersebut menggunakan fungsi <code>breakpoints</code> dari package <code>strucchange</code> <span class="citation">(<a href="#ref-R-strucchange" role="doc-biblioref">Zeileis <em>et al.</em> 2019</a>)</span>. Algoritma yang dipakai cukup sederhana: dihitung BIC dan Jumlah Kuadrat Sisaan di tiap kemungkinan titik perubahan struktural. ika kita menggunakan model rata-rata yang sederhana seperti <code>lm(y~1)</code>, terlihat bahwa dibutuhkan dua break point untuk data tersebut:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="praproses-dan-eksplorasi-data.html#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(strucchangeRcpp)</span>
+<span id="cb29-2"><a href="praproses-dan-eksplorasi-data.html#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="praproses-dan-eksplorasi-data.html#cb29-3" aria-hidden="true" tabindex="-1"></a>breakOil<span class="ot">&lt;-</span><span class="fu">breakpoints</span>(<span class="fu">pull</span>(crude0917,fixed)<span class="sc">~</span><span class="dv">1</span>)</span>
+<span id="cb29-4"><a href="praproses-dan-eksplorasi-data.html#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(breakOil)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-375-1.png" width="672" /></p>
+<p>RSS dan BIC turun drastis setelah menambah dua break point. Break point tersebut dapat diperlihatkan sebagai berikut:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="praproses-dan-eksplorasi-data.html#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">breakpoints</span>(<span class="fu">pull</span>(crude0917,fixed)<span class="sc">~</span><span class="dv">1</span>,<span class="at">breaks=</span><span class="dv">2</span>)<span class="sc">$</span>breakpoints</span></code></pre></div>
+<pre><code>## [1]  461 1488</code></pre>
+<p>Breakpoint berada di observasi ke-461 (29 Oktober 2010) dan 1488 (26 November 2014) jika menggunakan dua breakpoint. Peubah yang menandakan segmen-segmen yang berbeda dapat dibuat (segmen pertama adalah observasi sebelum observasi ke-461, segmen kedua berada di antara observasi ke-461 dan 1488, dan segmen terakhir adalah observasi setelah observasi 1488).</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="praproses-dan-eksplorasi-data.html#cb32-1" aria-hidden="true" tabindex="-1"></a>crudesegmented<span class="ot">&lt;-</span> crudeDummies <span class="sc">%&gt;%</span> </span>
+<span id="cb32-2"><a href="praproses-dan-eksplorasi-data.html#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">B1=</span><span class="fu">ifelse</span>(X <span class="sc">&gt;=</span> <span class="fu">nth</span>(X,<span class="dv">461</span>) <span class="sc">&amp;</span> X <span class="sc">&lt;=</span> <span class="fu">nth</span>(X,<span class="dv">1488</span>),<span class="dv">1</span>,<span class="dv">0</span>),</span>
+<span id="cb32-3"><a href="praproses-dan-eksplorasi-data.html#cb32-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">B2=</span><span class="fu">ifelse</span>(X <span class="sc">&gt;</span> <span class="fu">nth</span>(X,<span class="dv">1488</span>),<span class="dv">1</span>,<span class="dv">0</span>))</span>
+<span id="cb32-4"><a href="praproses-dan-eksplorasi-data.html#cb32-4" aria-hidden="true" tabindex="-1"></a>crude0917 <span class="sc">%&gt;%</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb32-5"><a href="praproses-dan-eksplorasi-data.html#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>X, <span class="at">y=</span>fixed)) <span class="sc">+</span></span>
+<span id="cb32-6"><a href="praproses-dan-eksplorasi-data.html#cb32-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_line</span>()<span class="sc">+</span></span>
+<span id="cb32-7"><a href="praproses-dan-eksplorasi-data.html#cb32-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_vline</span>(<span class="at">xintercept=</span><span class="fu">as.Date</span>(<span class="st">&#39;2010-10-29&#39;</span>), <span class="at">col=</span><span class="st">&quot;darkred&quot;</span>)<span class="sc">+</span></span>
+<span id="cb32-8"><a href="praproses-dan-eksplorasi-data.html#cb32-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_vline</span>(<span class="at">xintercept=</span><span class="fu">as.Date</span>(<span class="st">&#39;2014-11-26&#39;</span>), <span class="at">col=</span><span class="st">&quot;darkred&quot;</span>)<span class="sc">+</span></span>
+<span id="cb32-9"><a href="praproses-dan-eksplorasi-data.html#cb32-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">ggtitle</span>(<span class="st">&quot;Harga Minyak (CL.F. Close)&quot;</span>)<span class="sc">+</span></span>
+<span id="cb32-10"><a href="praproses-dan-eksplorasi-data.html#cb32-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">xlab</span>(<span class="st">&quot;Waktu&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Harga&quot;</span>)<span class="sc">+</span></span>
+<span id="cb32-11"><a href="praproses-dan-eksplorasi-data.html#cb32-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">theme_classic</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-377-1.png" width="672" /></p>
+<p>Segmentasi ini akan digunakan sebagai peubah <em>dummy</em> yang menjadi input model ARIMAX. Dapat dilihat matriks peubah <em>dummy</em> yang akan dipakai, termasuk segmentasi dan efek hari setelah libur:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="praproses-dan-eksplorasi-data.html#cb33-1" aria-hidden="true" tabindex="-1"></a>crudesegmented <span class="sc">%&gt;%</span> <span class="fu">select</span>(dumMon,dumHol,B1,B2) <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb33-2"><a href="praproses-dan-eksplorasi-data.html#cb33-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">dumMon</th>
+<th align="right">dumHol</th>
+<th align="right">B1</th>
+<th align="right">B2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Dapat dilihat bahwa peubah tersebut berkorelasi cukup tinggi dengan harga minyak:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="praproses-dan-eksplorasi-data.html#cb34-1" aria-hidden="true" tabindex="-1"></a>crudesegmented <span class="sc">%&gt;%</span> <span class="fu">select</span>(B1,B2,fixed) <span class="sc">%&gt;%</span> <span class="fu">summarize</span>(<span class="at">Break1=</span><span class="fu">cor</span>(B1,fixed),</span>
+<span id="cb34-2"><a href="praproses-dan-eksplorasi-data.html#cb34-2" aria-hidden="true" tabindex="-1"></a>                                                     <span class="at">Break2=</span><span class="fu">cor</span>(B2,fixed)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="praproses-dan-eksplorasi-data.html#cb34-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Break1</th>
+<th align="right">Break2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.8605528</td>
+<td align="right">-0.8173909</td>
+</tr>
+</tbody>
+</table>
+<p>Ekstraksi fitur tersebut sepertinya memiliki kemungkinan lebih baik untuk meningkatkan kebaikan model daripada fitur-fitur sebelumnya.</p>
+</div>
+<div id="kestastioneran" class="section level2 hasAnchor" number="1.5">
+<h2><span class="header-section-number">1.5</span> Kestastioneran<a href="praproses-dan-eksplorasi-data.html#kestastioneran" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>ACF untuk menunjukkan ketakstasioneran data keseluruhan:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="praproses-dan-eksplorasi-data.html#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(<span class="fu">pull</span>(crude0917,fixed), <span class="at">plot=</span>T)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-380-1.png" width="672" /></p>
+<p>ACF menuruan secara eksponensial hingga data tak stasioner.</p>
+
+</div>
+</div>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-barclay_price_2015" class="csl-entry">
+Barclay MJ, Hendershott T. 2015. Price <span>Discovery</span> and <span>Trading</span> <span>After</span> <span>Hours</span>. <em>The Review of Financial Studies</em>. 16(4):1041–1073.doi:<a href="https://doi.org/10.1093/rfs/hhg030">10.1093/rfs/hhg030</a>.
+</div>
+<div id="ref-cryer_time_2008" class="csl-entry">
+Cryer JD, Chan KS. 2008. <em>Time <span>Series</span> <span>Analysis</span>: <span>With</span> <span>Applications</span> in <span>R</span></em>. Springer New York. (Springer <span>Texts</span> in <span>Statistics</span>).
+</div>
+<div id="ref-fouroil" class="csl-entry">
+Elshendy M, Colladon AF, Battistoni E, Gloor PA. 2018. Using four different online media sources to forecast the crude oil price. <em>Journal of Information Science</em>. 44(3):408–421.doi:<a href="https://doi.org/10.1177/0165551517698298">10.1177/0165551517698298</a>.
+</div>
+<div id="ref-fpp2" class="csl-entry">
+Hyndman RJ, Athanasopoulos G. 2018. <em>Forecasting: Principles and Practice</em>. ed ke-2. Australia: OTexts.
+</div>
+<div id="ref-khan_economic_2014" class="csl-entry">
+Khan M. 2014. The <span>Economic</span> <span>Consequences</span> of the <span>Arab</span> <span>Spring</span>. <em>Atlantic Council: Rafik Hariri Center for the Middle East</em>.:10.
+</div>
+<div id="ref-tlioil" class="csl-entry">
+Li T. 2021. The 2008 Financial Crisis and Its Effects on Gas and Oil. <em>Investopedia</em>. [diunduh 2022 Apr 7]. Tersedia pada: <a href="https://www.investopedia.com/ask/answers/052715/how-did-financial-crisis-affect-oil-and-gas-sector.asp">https://www.investopedia.com/ask/answers/052715/how-did-financial-crisis-affect-oil-and-gas-sector.asp</a>
+</div>
+<div id="ref-mead_2014_2015" class="csl-entry">
+Mead D, Stiger P. 2015. The 2014 plunge in import petroleum prices: <span>What</span> happened? <em>Beyond the Numbers: Global Economy</em>. 4(9).
+</div>
+<div id="ref-R-imputeTS" class="csl-entry">
+Moritz S, Gatscha S. 2021. <em>imputeTS: Time Series Missing Value Imputation</em>. Ed ke-R package version 3.2.
+</div>
+<div id="ref-voxoil" class="csl-entry">
+Plumer B. 2014. Oil prices keep plummeting as <span>OPEC</span> starts a price war with the <span>US</span>. <em>Vox</em>. [diunduh 2022 Apr 7]. Tersedia pada: <a href="https://www.vox.com/2014/11/28/7302827/oil-prices-opec">https://www.vox.com/2014/11/28/7302827/oil-prices-opec</a>
+</div>
+<div id="ref-soverflow" class="csl-entry">
+Stefan (https://stackoverflow.com/users/1494637/stefan). 2019. converting daily stock data to weekly-based via pandas in Python. <em>Stack Overflow</em>.
+</div>
+<div id="ref-guardoil" class="csl-entry">
+Wearden G. 2009. Oil price creeps back towards 100 a barrel. <em>The Guardian</em>. [diunduh 2022 Apr 7]. Tersedia pada: <a href="https://www.theguardian.com/business/2009/jun/10/oil-price-increase">https://www.theguardian.com/business/2009/jun/10/oil-price-increase</a>
+</div>
+<div id="ref-R-ggplot2" class="csl-entry">
+Wickham H, Chang W, Henry L, Pedersen TL, Takahashi K, Wilke C, Woo K, Yutani H, Dunnington D. 2021. <em>ggplot2: Create Elegant Data Visualisations Using the Grammar of Graphics</em>. Ed ke-R package version 3.3.5.
+</div>
+<div id="ref-R-dplyr" class="csl-entry">
+Wickham H, François R, Henry L, Müller K. 2022. <em>dplyr: A Grammar of Data Manipulation</em>. Ed ke-R package version 1.0.8.
+</div>
+<div id="ref-R-timeDate" class="csl-entry">
+Wuertz D, Setz T, Chalabi Y, Maechler M, Byers JW. 2018. <em>timeDate: Rmetrics - Chronological and Calendar Objects</em>. Ed ke-R package version 3043.102.
+</div>
+<div id="ref-R-strucchange" class="csl-entry">
+Zeileis A, Leisch F, Hornik K, Kleiber C. 2019. <em>strucchange: Testing, Monitoring, and Dating Structural Changes</em>. Ed ke-R package version 1.5-2.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="praproses-dan-eksplorasi-data-2017-2022.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/01-praeksplor.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

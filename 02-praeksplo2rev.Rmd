@@ -1,0 +1,201 @@
+# Praproses dan Eksplorasi Data (2017-2022)
+
+Bagian ini akan membahas beberapa hal:
+
+1. Permasalahan interval waktu data
+2. Latar belakang fluktuasi harga minyak pada tahun 2017-2022
+3. Ekstraksi peubah *dummy* untuk memodelkan efek COVID-19
+4. Pola data time series dan kestasioneran
+5. Identifikasi model.
+
+## Interval waktu data
+
+Dari melihat 10 tanggal pertama yang dicatat di dataset harga minyak:
+```{r}
+knitr::kable(head(crudenow,n=10),
+             col.names = c("Tanggal","Harga Penutupan"))
+```
+
+Terlihat bahwa rentang waktu pengamatan data tidak sama. Misal, tidak ada pengamatan saat 1 Januari 2009 karena ada libur tahun baru. Selain itu, ada lompatan dari 2 Januari 2009 ke 5 Januari 2009. Dalam kata lain, harga minyak tidak diamati pada tanggal 3 dan 4 Januari 2009, yang merupakan akhir minggu (hari Sabtu dan Minggu). Pola yang sama terulang di data deret waktu tersebut bagi akhir minggu dan hari libur lainnya - pasar ditutup sehingga harga minyak tidak ada. 
+
+Situasi ini dapat ditangani dengan tiga cara umum:
+
+1. Abaikan rentang waktu harian yang tidak sama. Gunakan *trading days* atau hari kerja sebagai rentang waktu.
+2. Isi data akhir minggu dan hari libur menggunakan suatu bentuk interpolasi.
+3. Agregasikan data menjadi data mingguan, bulanan, atau tahunan.
+
+Cara pertama sering dipakai dalam peramalan deret waktu. Walaupun tidak ada data hari libur dan akhir minggu, nilai harian reksadana saham CREF dari tahun 2004 sampai 2006 dimodelkan dengan menggangap data tersebut memiliki rentang waktu yang sama [@cryer_time_2008]. Pemodelan harga emas harian dari tahun 1985 sampai 1989 juga hanya menggunakan *trading days*. Dilakukan interpolasi, tetapi hanya untuk data hilang di *trading days* [@fpp2]. Peramalan harga minyak [@fouroil] juga menggunakan data selama 84 hari kerja saja.
+
+Namun, juga ada justifikasi untuk interpolasi data. Interpolasi data dilakukan saat observasi tersebut dianggap memiliki nilai suatu peubah, tetapi tidak dapat diobservasi. Misal, tidak perlu melakukan interpolasi peubah gaji untuk seorang anak karena dia tidak mungkin bekerja. Dalam kasus ini, harga minyak di hari libur mungkin saja memiliki nilai. Pasar saham dan sekuritas sering mengalami *after-hours trading*; saat hal tersebut terjadi, harga berubah [@barclay_price_2015]. Walaupun begitu, bentuk proses tersebut harus diasumsikan untuk diinterpolasi. Misal, jika menggunakan interpolasi linear, diasumsikan bahwa pergerakan harga dari hari kerja ke hari kerja lainnya di hari libur konstan. Ini belum tentu benar - mungkin saja di hari Sabtu, harga masih naik dari hari Jumat, tetapi harga turun di hari Minggu. Interpolasi linear akan mengasumsikan harga turun di Sabtu dan Minggu. Oleh karena itu, interpolasi akan menghasilkan aproksimasi kasar dari proses *after-hours trading*.
+
+Agregasi data dapat menyelesaikan masalah tersebut karena hasil agregasi dianggap memiliki rentang waktu sama. Misal, mingguan atau bulanan. Agregasi ini harus mengikuti beberapa aturan [@soverflow]. Untuk harga *opening*, akan diambil data harga open dari hari pertama di minggu/bulan tersebut - harga tersebut merupakan harga minyak saat pasar dibuka. Harga *close* diambil dari harga close hari terakhir di minggu/bulan tersebut - harga tersebut merupakan harga minyak saat pasar ditutup. Harga maksimum dan minimum memiliki logika yang mirip.
+
+Namun, agregasi data belum tentu menyelesaikan masalah rentang waktu tak sama. Ada beberapa bulan yang memiliki 28, 30, dan 31 hari. Ini berarti rentang pengamatan satu bulan dapat berarti beberapa jarak waktu yang berbeda. Data mingguan selalu memiliki rentang 7 hari jika data diambil dari hari yang sama di setiap minggu. Dalam kasus ini, ini berarti mengasumsikan data di hari Jumat selalu ada untuk *closing*, atau data hari Senin selalu ada. Mengingat rentang waktu yang cukup lama (8 tahun), kemungkinan besar ada data di hari-hari tersebut yang tidak ada.
+
+Untuk melihat apakah kemungkinan tersebut terjadi, ambil data per minggu. Lalu, kurangkan hari terakhir di minggu tersebut dengan hari terakhir di minggu sebelumnya untuk mendapatkan jarak antarminggu. Akan digunakan fungsi `ISOweek` dari package dengan nama yang sama [@R-ISOweek] agar pembagian minggu mengikuti standar ISO 8601. Tabel lalu dimanipulasi menggunakan `data.table` [@R-data.table], khusunya fungsi shift yang dapat memunculkan lag 1 dari variabel tertentu.
+
+```{r results="hide"}
+library(ISOweek)
+library(data.table)
+
+weeklyCrude<-crudenow[,Week:=ISOweek(X)
+         ][,.(Date=last(X),
+            Close=last(`CL=F.Close`)),by=list(Week)
+           ][,Dist:=Date-shift(Date)]
+```
+
+Tidak semua minggu memiliki jarak 7 hari. Ada beberapa minggu dengan jarak 6 dan 8 hari:
+
+```{r}
+knitr::kable(weeklyCrude[,.(count=.N),by=Dist], col.names = c("Jarak",
+                                                              "Jumlah"))
+```
+
+Dapat diekstraksi peubah *dummy* dari minggu-minggu dengan jarak lebih dari 7 hari untuk memodelkan efek minggu-minggu tersebut.
+
+```{r message=FALSE, warning=FALSE}
+weeklyCrude[,Dist:=na.fill(Dist,type="const",fill=as.Date(7))
+         ][,`:=`("6DW"=ifelse(Dist==6,1,0),
+               "8DW"=ifelse(Dist==8,1,0))]
+```
+
+Peubah tersebut nantinya dapat digunakan dalam pemodelan. Namun, sepertinya baik *dummy* dengan untuk minggu periode 6 hari dan  8 hari tidak berkorelasi terlalu besar dengan harga minyak saat penutupan pasar:
+
+```{r}
+knitr::kable(t(c(cor(weeklyCrude$`6DW`,weeklyCrude$Close,method="spearman"),
+               cor(weeklyCrude$`8DW`,weeklyCrude$Close,method="spearman"))),
+               col.names=c("6 Hari","8 hari"),
+               row.names=F)
+```
+
+## Plot data
+
+Untuk melihat jenis data yang dihadapi, dapat di-plot data deret waktu mingguan harga minyak dari tahun 2017-2022 dengan ggplot2 [@R-ggplot2]:
+
+```{r}
+ggplot(aes(x=Date, y=Close),data=weeklyCrude) +
+  geom_line()+ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+
+  xlab("Waktu")+ylab(" ")+theme_bw()
+```
+
+Data jelas tidak stasioner.
+
+## Latar Belakang
+
+```{r}
+cbbPalette <- c("#E69F00", "#56B4E9", "#D3D3D3", "#009E73", "#CC79A7")
+highlightPalette<-c("#D3D3D3","#00008b")
+
+weeklyCrude[,"2017 - Siklik":=ifelse(Date<=as.Date("2017-11-10"),T,F)]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`2017 - Siklik`))+scale_color_manual(values=highlightPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Di awal tahun 2017, harga minyak menurun karena komitmen produsen minyak di OPEC untuk memotong produksi minyak diragukan. Selain itu, turunnya volume ekspor Tiongkok menandakan kemungkinan lemahnya permintaan untuk minyak mentah [@reu_oil_2017]. Namun, harga minyak sedikit naik di akhir Januari 2017 karena melemahnya dolar Amerika Serikat - minyak dibeli menggunakan dolar Amerika Serikat, sehingga dolar yang lebih lemah berarti negara pengimpor minyak dapat membeli lebih banyak minyak mentah yang meningkatkan permintaan [@reu_oil_2017-1].
+
+Walaupun terdapat fenomena tersebut, pasokan minyak masih meningkat sehingga harga minyak turun sampai Maret. Arab Saudi berjanji untuk menurunkan produksi di bulan April, tetapi produksi minyak negara OPEC justru meningkat di bulan Juni sampai harga minyak mencapai titik terendahnya [@reu_oil_2017-4]. Janji OPEC untuk menurunkan produksi minyak dipenuhi di paruh kedua 2017 dan permintaan meningkat. Oleh karena itu, harga minyak meningkat sampai pulih ke level sebelum bulan Juni di bulan November [@reu_oil_2017-6].
+
+Secara umum, periode ini ditandakan dengan siklus. Negara OPEC berjanji menurunkan produksi (yang meningkatkan harga), tetapi produksi sebenarnaya masih tinggi (yang menurunkan harga) sehingga harga turun lalu naik.
+
+```{r}
+weeklyCrude[,"Awal 2018 - harga naik":=ifelse(Date>=as.Date("2017-11-10") & Date<=as.Date("2018-10-10"),T,F)]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`Awal 2018 - harga naik`))+scale_color_manual(values=highlightPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Harga minyak naik di akhir tahun 2017 sampai triwulan ketiga 2018. Selain turunnya produksi minyak oleh OPEC, terjadi gangguan pipa minyak di Libya dan Rusia yang menganggu distribusi minyak. Di awal Januari 2018, rendahnya pasokan minyak dunia meningkatkan harga. Walaupun terjadi sedikit penurunan karena Amerika Serikat berencana meningkatkan produksi [@reu_oil_2018], negara-negara OPEC masih memotong produksi karena ingin meningkatkan harga minyak. Pada Maret sampai Mei 2018, harga minyak naik karena ketidakstabilan di Suriah, kemungkinan pembatasan impor minyak dari Iran, dan rendahnya produksi minyak OPEC dan Venezuela.
+
+```{r}
+weeklyCrude[,"Akhir 2018 - harga turun":=
+              ifelse(Date>=as.Date("2018-10-10") & Date<=as.Date("2018-12-31"),T,F)]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`Akhir 2018 - harga turun`))+scale_color_manual(values=highlightPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Harga minyak turun drastis di akhir tahun 2018. Rusia dan Arab Saudi mengumumkan peningkatan produksi untuk menggantikan minyak Iran, pemerintah Amerika Serikat memberi dispensasi ke beberapa perusahaan Iran [@woolich_sanctions_nodate], dan produksi *shale oil* as meningkat. Dari sisi penawaran, pasokan minyak meningkat yang menurunkan harga [@dichristopher_us_2018].
+
+```{r}
+weeklyCrude[, "Pra-COVID":=
+            ifelse(Date>=as.Date("2019-01-01") & Date<=as.Date("2020-02-03"),T,F)]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`Pra-COVID`))+scale_color_manual(values=highlightPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Tahun 2019 diawali dengan peningkatan harga minyak karena penurunan produksi dari Arab Saudi dan sanksi kepada Venezuela. Terdapat penurunan harga di bulan Februari karena melambatnya pertumbuhan ekonomi di Amerika Serikat, yang menghasilkan sedikit fluktuasi naik-turun, tetapi harga minyak tetap naik karena dispensasi ke eksportir minyak Iran berakhir dan pembatasan perdagangan minyak diberlakukan [@welle_wwwdwcom_us_nodate]. Namun, setelah mencapai puncak di bulan April, harga minyak turun di bulan Mei saat Amerika Serikat mengumumkan perang dagang dengan Tiongkok [@reu_oil_2019]. Harga kembali naik di bulan Juni setelah Iran menjatuhkan *drone* Amerika Serikat, yang meningkatkan ketidakstabilan di Timur Tengah. Pengumuman tarif baru dalam perang dagang oleh Amerika Serikat menurunkan kembali harga minyak, tetapi ekspektasi penurunan produksi oleh OPEC meningkatkan harga minyak di November 2019.
+
+Secara umum, fluktuasi naik-turun terjadi karena tekanan perang dagang (yang menurunkan harga karena menurunkan permintaan minyak) dan tekanan dari OPEC serta ketidakstabilan Timur Tengah yag meningkatkan harga minyak.
+
+```{r}
+weeklyCrude[,"COVID":=
+              ifelse(Date>=as.Date("2020-02-03") & Date<=as.Date("2020-04-30"),T,F)]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`COVID`))+scale_color_manual(values=highlightPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Harga minyak dunia terjun bebas dari Februari sampai April 2020. Pandemi COVID-19 mengurangi aktivitas ekonomi sehingga permintaan minyak berkurang. Karena itu, negara-negara OPEC setuju untuk mengurangi produksi, kecuali Rusia. Terjadi perang harga minyak antara Arab Saudi dan Rusia. Arab Saudi meningkatkan produksi dan memberikan diskon harga minyak, sampai minyak turun drastis [@calhoun_saudirussia_nodate]. Akhirnya, tekanan dari Amerika Serikat ke Arab Saudi (dan penurunan devisa Arab Saudi dan Rusia saat harga minyak rendah) membuat kedua negara setuju untuk memotong produksi. Namun, harga masih turun di akhir April sampai menjadi negatif karena biaya menyimpan minyak lebih mahal dari harga jualnya [@lw_oil_2020].
+
+```{r}
+weeklyCrude[,"Pemulihan":=
+              ifelse(Date>=as.Date("2020-04-30") & Date<=as.Date("2020-10-24"),T,F)]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`Pemulihan`))+scale_color_manual(values=highlightPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Setelah bulan April, penurunan produksi minyak OPEC dan Amerika Serikat mulai memiliki efek dan harga minyak kembali meningkat. Di bulan Juli harga minyak turun sedikit karena menguatnya dolar (sehingga pengimpor minyak susah membeli minyak), rendahnya permintaan, dan pasokan Amerika Serikat yang lebih tinggi dari harapan. Berita mengenai Presiden Amerika Serikat pada bulan Oktober, Donald Trump, yang terkena COVID juga menurunkan harga minyak. Namun, fluktuasi tersebut relatif kecil dibandingkan fluktuasi-fluktuasi yang terjadi saat awal COVID. Berita mengenai vaksin COVID di akhir 2020 [@pfizer_2020] meningkatkan kepercayaan bahwa ekonomi dunia akan kembali pulih, dan harga minyak mulai naik.
+
+```{r}
+weeklyCrude[,"Vaksin, Varian":=
+              ifelse(Date>=as.Date("2020-10-24") & Date<=as.Date("2021-02-13"),
+                     "Vaksinasi",
+              ifelse(Date>=as.Date("2021-02-02") & Date<=as.Date("2021-05-07"),
+                     "Alpha",
+              ifelse(Date>=as.Date("2021-05-07") & Date<=as.Date("2021-09-01"),
+                     "Delta",
+              ifelse(Date>=as.Date("2021-09-01") & Date<=as.Date("2021-12-01"),
+                     "Omicron","Lainnya"))))]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`Vaksin, Varian`))+scale_color_manual(values=cbbPalette)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Tren umum harga minyak naik karena optimisme mengenai vaksin. OPEC juga masih membatasi produksi pada awal tahun 2021. Namun, tren tersebut tidak mulus karena muncul beberapa varian COVID-19. Varian Alpha disebut *variant of concern* pada Februari 2021. Harga minyak turun karena infeksi dari varian Alpha meningkat. Lalu, setelah varian tersebut teratasi, pemulihan ekonomi dunia meningkatkan harga minyak. Delta mulai disebut *variant of conern* pada Mei 2021, dan di beberapa negara peningkatan kasus dari Delta masih ada sampai bulan September. Harga minyak turun [@reu_oil_2021]. Namun, badai Ida di Amerika Serikat yang mengaggu produksi minyak, penurunan produksi OPEC, dan perbaikan hubungan Amerika Serikat-Tiongkok meningkatkan harga minyak. Saat varian Omicron muncul, harga minyak turun lagi [@resnick-ault_oil_2021].
+
+```{r}
+cbbPalette2 <- c("#D3D3D3","#E69F00", "#56B4E9")
+
+weeklyCrude[,"2022":=
+              ifelse(Date>=as.Date("2021-12-01") & Date<=as.Date("2022-02-24"),
+                     "Pemulihan Omicron",
+              ifelse(Date>=as.Date("2022-02-24"),"Perang Ukraina-Russia","Lainnya"))]
+ggplot(aes(x=Date, y=Close),
+       data=weeklyCrude)+
+  geom_line(aes(color=`2022`))+scale_color_manual(values=cbbPalette2)+
+  ggtitle("Harga Minyak (CL.F. Close) - USD/Barrel")+xlab("Waktu")+ylab(" ")+
+  theme_bw()
+```
+
+Harga minyak naik di awal tahun 2022 setelah varian Omicron ditemukan memiliki tingkat kematian lebih rendah. Stok minyak di Amerika Serikat menurun, dan stok di Uni Emirat Arab terganggu setelah negara tersebut diserang oleh Houthi. Lalu, perang Rusia-Ukraina pada 24 Februari 2022 meningkatkan harga minyak secara drastis karena impor minyak dari Rusia dapat dihentikan oleh Amerika Serikat dan negara Eropa Barat. Harga minyak turun dari puncaknya di awal Maret setelah Amerika Serikat bernegosiasi dengan Iran dan Venezuela untuk mengganti pasokan minyak, mulai ada perundingan antara Rusia dan Ukraina, serta rencana Amerika Serikat untuk mengeluarkan pasokan strategis minyaknya [@cnn_us_nodate]. 
+
+Dampak invasi Rusia ke Ukraina sangat signifikan terhadap harga minyak di negara-negara barat terutama Eropa yang sangat bergantung terhadap minyak dari Rusia. Invasi tersebut menyebabkan disrupsi suplai minyak dari Rusia akibat perang dan rencana embargo minyak mentah karena agresi Rusia mulai diperbincangkan. Harga minyak yang tinggi juga berpengaruh terhadap harga komoditas pangan karena logistik dari satu tempat ke tempat lainnya membutuhkan bahan bakar minyak [@islam_ukraine_nodate]. 
+
+Selain negara-negara barat, dampak harga minyak juga terasa di negara-negara Asia. Meskipun nilai perdagangan dengan Rusia rendah, kenaikan harga komoditas pangan akibat logistik yang terganggu akan mengakibatkan inflasi semakin parah dan menghambat pemulihan ekonomi pasca pandemi. Untuk mengatasi hal tersebut, berbagai negara seperti Korea dan Jepang memberlakukan subsidi harga minyak untuk meminimalkan dampak ekonomi dari tingginya harga minyak [@kammer_how_nodate]. 

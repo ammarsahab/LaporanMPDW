@@ -1,0 +1,371 @@
+---
+title: "plots"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+```{r setup, message=FALSE}
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(RColorBrewer)
+library(smoothCV)
+library(data.table)
+library(forecast)
+library(TTR)
+```
+
+```{r}
+start <- as.POSIXct("2017-01-01")
+end <- as.POSIXct(Sys.Date())
+
+crude_wk <- tidyquant::tq_get("CL=F", 
+                              from = start, to = end) |>
+  mutate(date = as.Date(date, format ="%d/%m/%Y"),
+         week = ISOweek::ISOweek(date))|>
+  group_by(week) |> slice_tail(n = 1) |>
+  select(date, week, close) |> ungroup()
+```
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2018-10-10")) |>
+  mutate(Split = "Train")
+testset <- crude_wk |> 
+  filter(date > as.Date("2018-10-10")) |>
+  head(4) |> mutate(Split = "Test")
+
+plotdata <- 
+  bind_rows(trainset,testset) |>
+  mutate(DES_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(gamma = F) |> predict(nrow(testset))
+             }),
+         ARIMA_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               forecast::auto.arima() |> predict(nrow(testset)) |>
+               with(pred)
+           }),
+         DES_means = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 0.2, beta = 0.2, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_vars = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 0.1, beta = 0.4, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DMA = rep(NA, nrow(trainset)) |> 
+           c({
+             {trainset |> select(close) |> 
+                    smoothCV::dma.dt(m = 6, nahead = 4)}[[2]] |>
+               with(forc)
+             }))
+
+
+ggplot(aes(x = date, y = close), data = plotdata[86:96,]) +
+  geom_line(data = ~filter(.x, Split == "Train")) +
+  geom_point(aes(color = "Actual"), size=3, alpha=0.3) +
+  geom_point(aes(y = DES_base, color = 'DES baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = ARIMA_base, color = 'ARIMA baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_means, color = 'DES, minimize error means'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_vars, color = 'DES, minimize error variance'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DMA, color = 'DMA'), size=3, alpha=0.3) + 
+  scale_color_manual(name='Methods',
+                     breaks=c('Actual','ARIMA baseline', 'DES baseline',
+                              'DES, minimize error means', 
+                              'DES, minimize error variance',
+                              'DMA'),
+                     values=c('Actual'= 'darkgray',
+                              'ARIMA baseline'='#FB8072', 
+                              'DES baseline'='#E69F00',
+                              'DES, minimize error means' = '#8DD3C7', 
+                              'DES, minimize error variance' = '#BEBADA',
+                              'DMA' = '#80B1D3'))+
+  theme_minimal() + xlab("Date") + ylab("Price")
+```
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2020-01-07")) |>
+  mutate(Split = "Train")
+
+testset <- crude_wk |> 
+  filter(date > as.Date("2020-01-07")) |>  
+  mutate(Split = "Test") |> head(4)
+
+plotdata <- 
+  bind_rows(trainset,testset) |>
+  mutate(DES_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(gamma = F) |> predict(nrow(testset))
+           }),
+         ARIMA_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               forecast::auto.arima() |> predict(nrow(testset)) |>
+               with(pred)
+           }),
+         DES_meanMSE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.4, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_meanabs = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.3, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_vars = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.5, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DMA = rep(NA, nrow(trainset)) |> 
+           c({
+             {trainset |> select(close) |> 
+                 smoothCV::dma.dt(m = 2, nahead = 4)}[[2]] |>
+               with(forc)
+           }))
+
+
+ggplot(aes(x = date, y = close), data = plotdata[151:161,]) +
+  geom_line(data = ~filter(.x, Split == "Train")) +
+  geom_point(aes(color = "Actual"), size=3, alpha=0.3) +
+  geom_point(aes(y = DES_base, color = 'DES baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = ARIMA_base, color = 'ARIMA baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_meanMSE, color = 'DES, minimize mean MSE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_meanabs, color = 'DES, minimize mean MAE and MAPE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_vars, color = 'DES, minimize error variance'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DMA, color = 'DMA'), size=3, alpha=0.3) + 
+  scale_color_manual(name='Methods',
+                     breaks=c('Actual','ARIMA baseline', 'DES baseline',
+                              'DES, minimize mean MSE',
+                              'DES, minimize mean MAE and MAPE',
+                              'DES, minimize error variance',
+                              'DMA'),
+                     values=c('Actual'= 'darkgray',
+                              'ARIMA baseline'='#FB8072', 
+                              'DES baseline'='#E69F00',
+                              'DES, minimize mean MSE' = '#8DD3C7',
+                              'DES, minimize mean MAE and MAPE' = '#B3DE69',
+                              'DES, minimize error variance' = '#BEBADA',
+                              'DMA' = '#80B1D3'))+
+  theme_minimal() + xlab("Date") + ylab("Price")
+```
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2020-04-27")) |>
+  mutate(Split = "Train")
+testset <- crude_wk |> 
+  filter(date > as.Date("2020-04-27")) |>
+  head(4) |> mutate(Split = "Test")
+
+trainset |> select(close) |>
+  naive(4) |> with(mean)
+
+plotdata <- 
+  bind_rows(trainset,testset) |>
+  mutate(Naive = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               naive(4) |> with(mean)
+           }),
+         DES_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(gamma = F) |> predict(nrow(testset))
+           }),
+         ARIMA_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               forecast::auto.arima() |> predict(nrow(testset)) |>
+               with(pred)
+           }),
+         DES_meanMSE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.5, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_meanMAPE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.7, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_meanMAE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.3, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_varMSEMAE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.6, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_varMAPE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 1, beta = 0.9, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DMA = rep(NA, nrow(trainset)) |> 
+           c({
+             {trainset |> select(close) |> 
+                 smoothCV::dma.dt(m = 2, nahead = 4)}[[2]] |>
+               with(forc)
+           }))
+
+
+str(plotdata)
+
+ggplot(aes(x = date, y = close), data = plotdata[167:177,]) +
+  geom_line(data = ~filter(.x, Split == "Train")) +
+  geom_point(aes(color = "Actual"), size=3, alpha=0.3) +
+  geom_point(aes(y = DES_base, color = 'DES baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = ARIMA_base, color = 'ARIMA baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_meanMSE, color = 'DES, minimize mean MSE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_meanMAPE, color = 'DES, minimize mean MAPE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_meanMAE, color = 'DES, minimize mean MAE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_varMSEMAE, color = 'DES, minimize var MSE and MAE'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_varMAPE, color = 'DES, minimize var MAPE'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DMA, color = 'DMA'), size=3, alpha=0.3) + 
+  scale_color_manual(name='Methods',
+                     breaks=c('Actual',
+                              'Naive', 'ARIMA baseline', 'DES baseline',
+                              'DES, minimize mean MSE',
+                              'DES, minimize mean MAPE',
+                              'DES, minimize mean MAE',
+                              'DES, minimize var MSE and MAE',
+                              'DES, minimize var MAPE',
+                              'DMA'),
+                     values=c('Actual'= 'darkgray',
+                              'Naive' = 'black',
+                              'ARIMA baseline'='#FB8072', 
+                              'DES baseline'='#E69F00',
+                              'DES, minimize mean MSE' = '#8DD3C7',
+                              'DES, minimize mean MAPE' = '#CCEBC5',
+                              'DES, minimize mean MAE' = '#B3DE69',
+                              'DES, minimize var MSE and MAE' = '#BEBADA',
+                              'DES, minimize var MAPE' = '#BC80BD',
+                              'DMA' = '#80B1D3'))+
+  theme_minimal() + xlab("Date") + ylab("Price")
+```
+
+```{r}
+trainset <- crude_wk |> 
+  filter(date <= as.Date("2020-11-01")) |>
+  mutate(Split = "Train")
+testset <- crude_wk |> 
+  filter(date > as.Date("2020-11-01")) |>
+  head(4) |> mutate(Split = "Test")
+
+
+plotdata <- 
+  bind_rows(trainset,testset) |>
+  mutate(Naive = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               naive(4) |> with(mean)
+           }),
+         DES_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(gamma = F) |> predict(nrow(testset))
+           }),
+         ARIMA_base = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               forecast::auto.arima() |> predict(nrow(testset)) |>
+               with(pred)
+           }),
+         DES_meanMSEMAE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 0.8, beta = 0.1, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_MAPE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 0.7, beta = 0.1, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_varMSE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 0.4, beta = 0.5, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DES_varMAE = rep(NA, nrow(trainset)) |> 
+           c({trainset |> select(close) |> 
+               stats::HoltWinters(alpha = 0.5, beta = 0.3, gamma = F) |> 
+               predict(nrow(testset))
+           }),
+         DMA_3 = rep(NA, nrow(trainset)) |> 
+           c({
+             {trainset |> select(close) |> 
+                 smoothCV::dma.dt(m = 3, nahead = 4)}[[2]] |>
+               with(forc)
+           }),
+         DMA_4 = rep(NA, nrow(trainset)) |> 
+           c({
+             {trainset |> select(close) |> 
+                 smoothCV::dma.dt(m = 4, nahead = 4)}[[2]] |>
+               with(forc)
+           }),
+         )
+
+
+
+
+str(plotdata)
+
+ggplot(aes(x = date, y = close), data = plotdata[194:204,]) +
+  geom_line(data = ~filter(.x, Split == "Train")) +
+  geom_point(aes(color = "Actual"), size=3, alpha=0.3) +
+  geom_point(aes(y = Naive, color = 'Naive'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_base, color = 'DES baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = ARIMA_base, color = 'ARIMA baseline'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_meanMSEMAE, color = 'DES, minimize mean MSE and MAE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_MAPE, color = 'DES, minimize mean and var MAPE'), 
+             size=3, alpha=0.3) +
+  geom_point(aes(y = DES_varMSE, color = 'DES, minimize var MSE'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DES_varMAE, color = 'DES, minimize var MAE'), 
+             size=3, alpha=0.3) + 
+  geom_point(aes(y = DMA_3, color = 'DMA, m = 3'), size=3, alpha=0.3) + 
+  geom_point(aes(y = DMA_4, color = 'DMA, m = 4'), size=3, alpha=0.3) + 
+  scale_color_manual(name='Methods',
+                     breaks=c('Actual',
+                              'Naive', 'ARIMA baseline', 'DES baseline',
+                              'DES, minimize mean MSE and MAE',
+                              'DES, minimize mean and var MAPE',
+                              'DES, minimize var MSE',
+                              'DES, minimize var MAE',
+                              'DMA, m = 3',
+                              'DMA, m = 4'),
+                     values=c('Actual'= 'darkgray',
+                              'Naive' = 'black',
+                              'ARIMA baseline'='#FB8072', 
+                              'DES baseline'='#E69F00',
+                              'DES, minimize mean MSE and MAE' = '#8DD3C7',
+                              'DES, minimize mean and var MAPE' = '#CCEBC5',
+                              'DES, minimize var MSE' = '#B3DE69',
+                              'DES, minimize var MAE' = '#BEBADA',
+                              'DMA, m = 3' = '#BC80BD',
+                              'DMA, m = 4' = '#80B1D3'))+
+  theme_minimal() + xlab("Date") + ylab("Price")
+```

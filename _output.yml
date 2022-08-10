@@ -1,0 +1,20 @@
+bookdown::gitbook:
+  css: style.css
+  pandoc_args: [ "--csl", "institut-pertanian-bogor.csl" ]
+  config:
+    toc:
+      before: |
+        <li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+      after: |
+        <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+    edit: https://github.com/USERNAME/REPO/edit/BRANCH/%s
+    download: ["pdf", "epub"]
+bookdown::pdf_book:
+  includes:
+    in_header: preamble.tex
+  latex_engine: xelatex
+  citation_package: default
+  pandoc_args: [ "--csl", "institut-pertanian-bogor.csl" ]
+  keep_tex: yes
+bookdown::epub_book:
+  pandoc_args: [ "--csl", "institut-pertanian-bogor.csl" ]

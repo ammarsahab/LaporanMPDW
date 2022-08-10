@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Bab 4 Single Moving Average | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</title>
+  <meta name="description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Bab 4 Single Moving Average | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  <meta name="github-repo" content="rstudio/bookdown-demo" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Bab 4 Single Moving Average | Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah" />
+  
+  <meta name="twitter:description" content="Laporan Tugas Akhir MPDW (Kelompok 10)" />
+  
+
+<meta name="author" content="Adley Dityo Valentinus Putra (G14180009)" />
+<meta name="author" content="Muhammad Ammar Sahab (G14190020)" />
+<meta name="author" content="Putri Eka Perdanti (G14190027)" />
+<meta name="author" content="Farhan Narendra Achyara (G14190050)" />
+<meta name="author" content="Grashella Clara Nesa Br Ginting (G14190086)" />
+
+
+<meta name="date" content="2022-04-14" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="praproses-dan-eksplorasi-data-2017-2022.html"/>
+<link rel="next" href="pemodelan.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Laporan Tugas Akhir MPDW (Kelompok 10)</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> cover-image: path to the social sharing image like images/cover.jpg<span></span></a>
+<ul>
+<li><a href="index.html#struktur-penelitian">Struktur penelitian<span></span></a></li>
+<li><a href="index.html#ekstraksi-data">Ekstraksi data<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html"><i class="fa fa-check"></i><b>2</b> Praproses dan Eksplorasi Data<span></span></a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#interval-waktu-data"><i class="fa fa-check"></i><b>2.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#pola-pola-data-dan-stasioneritas"><i class="fa fa-check"></i><b>2.2</b> Pola-pola data dan stasioneritas<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#latar-belakang"><i class="fa fa-check"></i><b>2.3</b> Latar Belakang<span></span></a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#harga-minyak-mentah-tahun-2009"><i class="fa fa-check"></i><b>2.3.1</b> Harga Minyak Mentah Tahun 2009<span></span></a></li>
+<li class="chapter" data-level="2.3.2" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#arab-spring"><i class="fa fa-check"></i><b>2.3.2</b> Arab Spring<span></span></a></li>
+<li class="chapter" data-level="2.3.3" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#shale-revolution"><i class="fa fa-check"></i><b>2.3.3</b> Shale Revolution<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#titik-titik-perubahan-struktural"><i class="fa fa-check"></i><b>2.4</b> Titik-titik perubahan struktural<span></span></a></li>
+<li class="chapter" data-level="2.5" data-path="praproses-dan-eksplorasi-data.html"><a href="praproses-dan-eksplorasi-data.html#kestastioneran"><i class="fa fa-check"></i><b>2.5</b> Kestastioneran<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html"><i class="fa fa-check"></i><b>3</b> Praproses dan Eksplorasi Data (2017-2022)<span></span></a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#interval-waktu-data-1"><i class="fa fa-check"></i><b>3.1</b> Interval waktu data<span></span></a></li>
+<li class="chapter" data-level="3.2" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#plot-data"><i class="fa fa-check"></i><b>3.2</b> Plot data<span></span></a></li>
+<li class="chapter" data-level="3.3" data-path="praproses-dan-eksplorasi-data-2017-2022.html"><a href="praproses-dan-eksplorasi-data-2017-2022.html#latar-belakang-1"><i class="fa fa-check"></i><b>3.3</b> Latar Belakang<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="single-moving-average.html"><a href="single-moving-average.html"><i class="fa fa-check"></i><b>4</b> Single Moving Average<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="single-moving-average.html"><a href="single-moving-average.html#validasi-silang-untuk-sma"><i class="fa fa-check"></i><b>4.1</b> Validasi silang untuk SMA<span></span></a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="single-moving-average.html"><a href="single-moving-average.html#kesimpulan"><i class="fa fa-check"></i><b>4.1.1</b> Kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="single-moving-average.html"><a href="single-moving-average.html#dma"><i class="fa fa-check"></i><b>4.2</b> DMA<span></span></a></li>
+<li class="chapter" data-level="4.3" data-path="single-moving-average.html"><a href="single-moving-average.html#ses"><i class="fa fa-check"></i><b>4.3</b> SES<span></span></a></li>
+<li class="chapter" data-level="4.4" data-path="single-moving-average.html"><a href="single-moving-average.html#des"><i class="fa fa-check"></i><b>4.4</b> DES<span></span></a></li>
+<li class="chapter" data-level="4.5" data-path="single-moving-average.html"><a href="single-moving-average.html#bantuan-untuk-kesimpulan"><i class="fa fa-check"></i><b>4.5</b> Bantuan untuk kesimpulan<span></span></a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="pemodelan.html"><a href="pemodelan.html"><i class="fa fa-check"></i><b>5</b> Pemodelan<span></span></a></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Perbandingan Smoothing, ARIMA, dan ARIMAX untuk prediksi harga minyak mentah</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="single-moving-average" class="section level1 hasAnchor" number="4">
+<h1><span class="header-section-number">Bab 4</span> Single Moving Average<a href="single-moving-average.html#single-moving-average" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Simple Moving Average adalah suatu teknik pemulusan yang bertujuan untuk melihat grafik secara eksploratif dengan cara menghitung rata-rata periode sekarang dengan periode sebelumnya. Hal ini bertujuan untuk melihat pola dari suatu data tanpa dipengaruhi data harian yang bergerak lebih ekstrem.(Montgomery <em>et al.</em> 2008)</p>
+<p>Rumus dari Simple Moving Average.</p>
+<p>$ M_{T} = (y_{T} + y_{(T-1)} + … + y_{(T-n+1)})/n = 1/N $ <span class="math display">\[\sum_{t=T-n+1}^{T} y_{t} \]</span></p>
+<div id="validasi-silang-untuk-sma" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">4.1</span> Validasi silang untuk SMA<a href="single-moving-average.html#validasi-silang-untuk-sma" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Lakukan validasi silang untuk SMA dengan jumlah data latih awal sebesar 36. Selebihnya, data dibagi menjadi 15 fold sehingga ada <span class="math inline">\((276-36)/15=16\)</span> observasi di tiap fold. Nilai M yang diuji adalah dari 2 sampai 30.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="single-moving-average.html#cb2-1" aria-hidden="true" tabindex="-1"></a>SMACV<span class="ot">&lt;-</span><span class="fu">fcCV</span>(weeklyCrude[,<span class="dv">3</span>],<span class="at">initialn=</span><span class="dv">36</span>,<span class="at">folds=</span><span class="dv">15</span>,<span class="at">type=</span><span class="st">&quot;SMA&quot;</span>,<span class="at">start=</span><span class="dv">2</span>,<span class="at">end=</span><span class="dv">30</span>,<span class="at">dist=</span><span class="dv">1</span>)</span></code></pre></div>
+<p>Hasil dari prosedur tersebut:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="single-moving-average.html#cb3-1" aria-hidden="true" tabindex="-1"></a>resultSMA<span class="ot">&lt;-</span>SMACV[[<span class="dv">3</span>]]</span></code></pre></div>
+<p>Buat boxplot untuk melihat mana M yang memnimumkan error</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="single-moving-average.html#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb4-2"><a href="single-moving-average.html#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSMA,<span class="fu">aes</span>(<span class="at">x=</span>M,<span class="at">y=</span>MSE,<span class="at">group=</span>M))<span class="sc">+</span></span>
+<span id="cb4-3"><a href="single-moving-average.html#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb4-4"><a href="single-moving-average.html#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MSE tiap M untuk SMA&quot;</span>)<span class="sc">+</span></span>
+<span id="cb4-5"><a href="single-moving-average.html#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;M&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Dapat dilihat bahwa error dari tiap parameter cenderung hampir sama di tiap nilai parameter M. Tetapi, keragaman dari boxplot cenderung terus meningkat jika nilai perameter bertambah dan garis median cenderung sama, atau sedikit naik, dalam setiap nilai parameter Bagaimana dengan MAPE?</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="single-moving-average.html#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb5-2"><a href="single-moving-average.html#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSMA,<span class="fu">aes</span>(<span class="at">x=</span>M,<span class="at">y=</span>MAPE,<span class="at">group=</span>M))<span class="sc">+</span></span>
+<span id="cb5-3"><a href="single-moving-average.html#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb5-4"><a href="single-moving-average.html#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAPE tiap M untuk SMA&quot;</span>)<span class="sc">+</span></span>
+<span id="cb5-5"><a href="single-moving-average.html#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;M&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Hasil cukup mirip dengan MSE, tetapi ada sedikit perbedaan. Nilai <em>outlier</em> pada boxplot MAPE cenderung meningkat seiring dengan bertambahnya nilai parameter M. Bagaimana dengan MAE:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="single-moving-average.html#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSMA,<span class="fu">aes</span>(<span class="at">x=</span>M,<span class="at">y=</span>MAE,<span class="at">group=</span>M))<span class="sc">+</span></span>
+<span id="cb6-2"><a href="single-moving-average.html#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb6-3"><a href="single-moving-average.html#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap M untuk SMA&quot;</span>)<span class="sc">+</span></span>
+<span id="cb6-4"><a href="single-moving-average.html#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;M&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Garis median terlihat sedikit membesar saat nilai parameter M makin membesar. Nilai outlier di nilai <span class="math inline">\(M\leq 6\)</span> terlihat menggerombol, sedangkan makin banyak M salah satu outlier bergabung ke boxplot dan satu lagi menjauh dari boxplot. Boxplot membesar sehingga kesalahan lebih beragam makin besar M. Lanjutkan dengan buat agregasi:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="single-moving-average.html#cb7-1" aria-hidden="true" tabindex="-1"></a>aggregateSMA<span class="ot">&lt;-</span>resultSMA[,<span class="st">`</span><span class="at">.</span><span class="st">`</span>(<span class="at">meanMSE=</span><span class="fu">mean</span>(MSE),</span>
+<span id="cb7-2"><a href="single-moving-average.html#cb7-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMSE=</span><span class="fu">var</span>(MSE),</span>
+<span id="cb7-3"><a href="single-moving-average.html#cb7-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAPE=</span><span class="fu">mean</span>(MAPE),</span>
+<span id="cb7-4"><a href="single-moving-average.html#cb7-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAPE=</span><span class="fu">var</span>(MAPE),</span>
+<span id="cb7-5"><a href="single-moving-average.html#cb7-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAE=</span><span class="fu">mean</span>(MAE),</span>
+<span id="cb7-6"><a href="single-moving-average.html#cb7-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAE=</span><span class="fu">var</span>(MAE)), by<span class="ot">=</span><span class="fu">list</span>(M)]</span></code></pre></div>
+<p>Jika dilihat nilai M yang meminimumkan mean dari MSE, MAPE, dan MAE:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="single-moving-average.html#cb8-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb8-2"><a href="single-moving-average.html#cb8-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb8-3"><a href="single-moving-average.html#cb8-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb8-4"><a href="single-moving-average.html#cb8-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">7</span>))</span>
+<span id="cb8-5"><a href="single-moving-average.html#cb8-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb8-6"><a href="single-moving-average.html#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">119.0668</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">120.3521</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">127.2576</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">132.0911</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">134.3445</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">137.0462</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">142.5453</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">15.27380</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">15.39877</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">15.83089</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">16.19941</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">16.77363</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">17.45599</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">18.28715</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">7.391500</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">7.582528</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">7.845292</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">7.993500</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">8.167375</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">8.408917</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">8.719646</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Nilai MSE dan MAPE berurutan dari 2, 3, …, 8 dari yang terkecil hingga terbesar. Kemudian, hitung nilai M yang meminimumkan ragam MSE dan MAPE:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="single-moving-average.html#cb9-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb9-2"><a href="single-moving-average.html#cb9-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, varMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb9-3"><a href="single-moving-average.html#cb9-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, varMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">5</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb9-4"><a href="single-moving-average.html#cb9-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, varMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">7</span>)],<span class="at">n=</span><span class="dv">7</span>))</span>
+<span id="cb9-5"><a href="single-moving-average.html#cb9-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb9-6"><a href="single-moving-average.html#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">varMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">43520.54</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">45690.52</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">48362.04</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="right">48614.81</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">49266.37</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">49569.52</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">49730.12</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">varMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">490.8998</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">496.4185</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">511.1400</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">536.9570</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">552.6315</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">587.2421</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">638.6103</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">varMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">42.60989</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">44.93565</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">45.01526</td>
+</tr>
+<tr class="even">
+<td align="right">15</td>
+<td align="right">45.03317</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">45.07751</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="right">45.11376</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">45.11526</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Urutan nilai M yang meminimumkan ragam metrik-metrik tersebut sedikit berbeda. Walaupun <span class="math inline">\(M=2\)</span> memiliki performa terbaik dalam meminimumkan rata-rata metrik, <span class="math inline">\(M=3\)</span> sepertinya lebih baik dalam meminimumkan ragam dari metrik-metrik tersebut. Ini secara umum berarti kesalahan-kesalahan dari <span class="math inline">\(M=3\)</span> akan lebih sering mendekati suatu nilai tertentu, walaupun rataannya lebih besar dari <span class="math inline">\(M=2\)</span>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="single-moving-average.html#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb10-2"><a href="single-moving-average.html#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSMA,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MSE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb10-3"><a href="single-moving-average.html#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb10-4"><a href="single-moving-average.html#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MSE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb10-5"><a href="single-moving-average.html#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>Boxplot untuk iterasi ke-9 (saat pandemi) dan ke-15 (pasca pandemi dan perang Rusia-Ukraina) memiliki rataan dan keragaman yang cukup besar dibandingkan iterasi lainnya pada data testing karena adanya fluktuasi yang ekstrem pada rentang waktu tersebut. Fluktuasi tersebut tidak cocok untuk SMA karena kurang dapat menangani data dengan tren.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="single-moving-average.html#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb11-2"><a href="single-moving-average.html#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSMA,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAPE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb11-3"><a href="single-moving-average.html#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb11-4"><a href="single-moving-average.html#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAPE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb11-5"><a href="single-moving-average.html#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Boxplot untuk iterasi ke-15 ternyata tidak memiliki MAPE besar. Ini terjadi karena MAPE lebih memboboti observasi dengan nilai amatan kecil (COVID saat harga minyak turun) daripada saat nilai amatan besar (Ukraina-Rusia saat terjadi inflasi harga minyak).</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="single-moving-average.html#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb12-2"><a href="single-moving-average.html#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSMA,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb12-3"><a href="single-moving-average.html#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb12-4"><a href="single-moving-average.html#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb12-5"><a href="single-moving-average.html#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Boxplot MAE per iterasi secara umum lebih mengikuti MSE.</p>
+<div id="kesimpulan" class="section level3 hasAnchor" number="4.1.1">
+<h3><span class="header-section-number">4.1.1</span> Kesimpulan<a href="single-moving-average.html#kesimpulan" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Berdasarkan nilai rataan dan ragam MSE dan MAPE, parameter m untuk metode SMA yang dipakai adalah saat M = 2 dan 3.</p>
+</div>
+</div>
+<div id="dma" class="section level2 hasAnchor" number="4.2">
+<h2><span class="header-section-number">4.2</span> DMA<a href="single-moving-average.html#dma" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Lakukan validasi silang untuk DMA dengan jumlah data latih awal sebesar 36. Selebihnya, data dibagi menjadi 15 fold sehingga ada <span class="math inline">\((276-36)/15=16\)</span> observasi di tiap fold. Nilai M yang diuji adalah dari 2 sampai 16.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="single-moving-average.html#cb13-1" aria-hidden="true" tabindex="-1"></a>DMACV<span class="ot">&lt;-</span><span class="fu">fcCV</span>(weeklyCrude[,<span class="dv">3</span>],<span class="at">initialn=</span><span class="dv">36</span>,<span class="at">folds=</span><span class="dv">15</span>,<span class="at">type=</span><span class="st">&quot;DMA&quot;</span>,<span class="at">start=</span><span class="dv">2</span>,<span class="at">end=</span><span class="dv">16</span>,<span class="at">dist=</span><span class="dv">1</span>)</span></code></pre></div>
+<p>Ambil hasil dari prosedur tersebut:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="single-moving-average.html#cb14-1" aria-hidden="true" tabindex="-1"></a>resultDMA<span class="ot">&lt;-</span>DMACV[[<span class="dv">3</span>]]</span></code></pre></div>
+<p>Buat boxplot untuk melihat mana M yang memnimumkan error</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="single-moving-average.html#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb15-2"><a href="single-moving-average.html#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDMA,<span class="fu">aes</span>(<span class="at">x=</span>M,<span class="at">y=</span>MSE,<span class="at">group=</span>M))<span class="sc">+</span></span>
+<span id="cb15-3"><a href="single-moving-average.html#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb15-4"><a href="single-moving-average.html#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MSE tiap M&quot;</span>)<span class="sc">+</span></span>
+<span id="cb15-5"><a href="single-moving-average.html#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;M&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>Dapat dilihat bahwa error dari tiap parameter cukup bervariasi di tiap iterasi. Hampir semua boxplot memiliki <em>outlier</em> yang sangat jauh dari kebanyakan observasi. Namun, terlihat bahwa di <span class="math inline">\(9\leq M\leq 12\)</span> boxplot lebih kecil, outlier lebih dekat, dan garis median lebih rendah dari boxplot lainnya. Ini berarti kesalahan di DMA dengan parameter tersebut biasanya rendah. Bagaimana dengan MAPE?</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="single-moving-average.html#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb16-2"><a href="single-moving-average.html#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDMA,<span class="fu">aes</span>(<span class="at">x=</span>M,<span class="at">y=</span>MAPE,<span class="at">group=</span>M))<span class="sc">+</span></span>
+<span id="cb16-3"><a href="single-moving-average.html#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb16-4"><a href="single-moving-average.html#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAPE tiap M&quot;</span>)<span class="sc">+</span></span>
+<span id="cb16-5"><a href="single-moving-average.html#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;M&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>Hasil cukup mirip dengan MSE, tetapi ada sedikit perbedaan. Terlihat bahwa di <span class="math inline">\(4\leq M \leq 7\)</span>, boxplot tidak memiliki outlier sama sekali. Justru, daerah yang sebelumnya dianggap baik, <span class="math inline">\(9 \leq M \leq 12\)</span> memiliki beberapa outlier.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="single-moving-average.html#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb17-2"><a href="single-moving-average.html#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDMA,<span class="fu">aes</span>(<span class="at">x=</span>M,<span class="at">y=</span>MAE,<span class="at">group=</span>M))<span class="sc">+</span></span>
+<span id="cb17-3"><a href="single-moving-average.html#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb17-4"><a href="single-moving-average.html#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap M&quot;</span>)<span class="sc">+</span></span>
+<span id="cb17-5"><a href="single-moving-average.html#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;M&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Boxplot MAE memiliki pola yang mengikuti MSE. Untuk memastikan, buat agregasi data error dari tiap nilai M:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="single-moving-average.html#cb18-1" aria-hidden="true" tabindex="-1"></a>aggregateDMA<span class="ot">&lt;-</span>resultDMA[,<span class="st">`</span><span class="at">.</span><span class="st">`</span>(<span class="at">meanMSE=</span><span class="fu">mean</span>(MSE),</span>
+<span id="cb18-2"><a href="single-moving-average.html#cb18-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMSE=</span><span class="fu">var</span>(MSE),</span>
+<span id="cb18-3"><a href="single-moving-average.html#cb18-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAPE=</span><span class="fu">mean</span>(MAPE),</span>
+<span id="cb18-4"><a href="single-moving-average.html#cb18-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAPE=</span><span class="fu">var</span>(MAPE),</span>
+<span id="cb18-5"><a href="single-moving-average.html#cb18-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAE=</span><span class="fu">mean</span>(MAE),</span>
+<span id="cb18-6"><a href="single-moving-average.html#cb18-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAE=</span><span class="fu">var</span>(MAE)), by<span class="ot">=</span><span class="fu">list</span>(M)]</span></code></pre></div>
+<p>Jika dilihat nilai M yang meminimumkan mean dari MSE:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="single-moving-average.html#cb19-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb19-2"><a href="single-moving-average.html#cb19-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb19-3"><a href="single-moving-average.html#cb19-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb19-4"><a href="single-moving-average.html#cb19-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">7</span>))</span>
+<span id="cb19-5"><a href="single-moving-average.html#cb19-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb19-6"><a href="single-moving-average.html#cb19-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">128.7952</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">131.9635</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+<td align="right">147.9552</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">152.3110</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">177.3898</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">200.9722</td>
+</tr>
+<tr class="odd">
+<td align="right">14</td>
+<td align="right">206.7495</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">16.22624</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">16.81760</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">17.12738</td>
+</tr>
+<tr class="even">
+<td align="right">11</td>
+<td align="right">17.26440</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+<td align="right">18.46130</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">18.53496</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">20.00920</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">7.782634</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">8.014064</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+<td align="right">8.049640</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">8.333288</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">8.709187</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">9.318198</td>
+</tr>
+<tr class="odd">
+<td align="right">14</td>
+<td align="right">9.660206</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Tampak bahwa nilai M=10 cukup konsisten baik (ranking 2) di MSE, MAPE, dan MAE. Nilai M=11 juga memeinimumkan nilai harapan MAE dan MSE, tetapi tidad meminimumkan MSE. Bagaimana dengan ragam dari MSE, MAPE, dan MAE?</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="single-moving-average.html#cb20-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb20-2"><a href="single-moving-average.html#cb20-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, varMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb20-3"><a href="single-moving-average.html#cb20-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, varMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">5</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb20-4"><a href="single-moving-average.html#cb20-4" aria-hidden="true" tabindex="-1"></a>    knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, varMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">7</span>)],<span class="at">n=</span><span class="dv">7</span>))</span>
+<span id="cb20-5"><a href="single-moving-average.html#cb20-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb20-6"><a href="single-moving-average.html#cb20-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">varMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">42115.73</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">45179.02</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+<td align="right">64357.60</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">77201.65</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">106964.60</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="right">147991.53</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">148454.59</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">varMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">267.6869</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">284.8783</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">380.0983</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">386.6581</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="right">415.1876</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">444.5219</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">497.9448</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">varMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">42.83526</td>
+</tr>
+<tr class="even">
+<td align="right">11</td>
+<td align="right">47.98709</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">51.54119</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="right">65.75002</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">70.77650</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">71.69444</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">83.37845</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>M=10 dan 11 konsisten baik di bebrbagai metrik kecuali ragam dari MAPE.</p>
+<p>Dapat juga dilihat iterasi mana yang memiliki error tinggi:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="single-moving-average.html#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb21-2"><a href="single-moving-average.html#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDMA,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MSE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb21-3"><a href="single-moving-average.html#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb21-4"><a href="single-moving-average.html#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MSE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb21-5"><a href="single-moving-average.html#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>Error terbesar ada di iterasi 5, 9, 10, dan 15. Iterasi 15 merupakan perang Rusia-Ukraina. Ada apa di iterasi 9 dan 10 tersebut?</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="single-moving-average.html#cb22-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb22-2"><a href="single-moving-average.html#cb22-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">c</span>(DMACV[[<span class="dv">1</span>]][<span class="dv">5</span>],DMACV[[<span class="dv">2</span>]][<span class="dv">5</span>]),<span class="at">col.names =</span> </span>
+<span id="cb22-3"><a href="single-moving-average.html#cb22-3" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;Range data iterasi 5&quot;</span>),</span>
+<span id="cb22-4"><a href="single-moving-average.html#cb22-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">c</span>(DMACV[[<span class="dv">1</span>]][<span class="dv">9</span>],DMACV[[<span class="dv">1</span>]][<span class="dv">10</span>],DMACV[[<span class="dv">2</span>]][<span class="dv">10</span>]),<span class="at">col.names =</span> </span>
+<span id="cb22-5"><a href="single-moving-average.html#cb22-5" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;Range data iterasi 9-10&quot;</span>)</span>
+<span id="cb22-6"><a href="single-moving-average.html#cb22-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-7"><a href="single-moving-average.html#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Range data iterasi 5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">101</td>
+</tr>
+<tr class="even">
+<td align="right">116</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Range data iterasi 9-10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">165</td>
+</tr>
+<tr class="even">
+<td align="right">181</td>
+</tr>
+<tr class="odd">
+<td align="right">196</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Cari tanggal tanggal tersebut:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="single-moving-average.html#cb23-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(weeklyCrude[,<span class="dv">2</span>][<span class="fu">c</span>(<span class="dv">101</span>,<span class="dv">116</span>,<span class="dv">165</span>,<span class="dv">181</span>,<span class="dv">196</span>)])</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Date</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2018-12-07</td>
+</tr>
+<tr class="even">
+<td align="left">2019-03-22</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-02-28</td>
+</tr>
+<tr class="even">
+<td align="left">2020-06-19</td>
+</tr>
+<tr class="odd">
+<td align="left">2020-10-02</td>
+</tr>
+</tbody>
+</table>
+<p>Dari 2018-2019, harga turun. Tentu, 2020 adalah COVID. Namun, dari MSE terlihat bahwa performa DMA beragam. Di SMA, di iterasi tersebut boxplot hampir homogen memiliki nilai error tinggi. Ini berarti, ada nilai-nilai M tertentu yang dapat meminimukan error di data tren tersebut.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="single-moving-average.html#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb24-2"><a href="single-moving-average.html#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDMA,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb24-3"><a href="single-moving-average.html#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb24-4"><a href="single-moving-average.html#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb24-5"><a href="single-moving-average.html#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p>Profil boxplot MAE untuk iterasi relatif sama dengan boxplot MSE.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="single-moving-average.html#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb25-2"><a href="single-moving-average.html#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDMA,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAPE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb25-3"><a href="single-moving-average.html#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb25-4"><a href="single-moving-average.html#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAPE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb25-5"><a href="single-moving-average.html#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p>MAPE tidak memboboti error saat perang Ukraina dan Rusia, sama seperti saat SMA. Parameter terbaika dalah <span class="math inline">\(M=10\)</span> dan <span class="math inline">\(M=11\)</span>.</p>
+</div>
+<div id="ses" class="section level2 hasAnchor" number="4.3">
+<h2><span class="header-section-number">4.3</span> SES<a href="single-moving-average.html#ses" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="single-moving-average.html#cb26-1" aria-hidden="true" tabindex="-1"></a>SESCV<span class="ot">&lt;-</span><span class="fu">fcCV</span>(weeklyCrude[,<span class="dv">3</span>],<span class="at">initialn=</span><span class="dv">36</span>,<span class="at">folds=</span><span class="dv">15</span>,<span class="at">type=</span><span class="st">&quot;SES&quot;</span>,<span class="at">alphrange=</span><span class="fu">seq</span>(<span class="fl">0.01</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))</span></code></pre></div>
+<p>Masukkan hasilnya:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="single-moving-average.html#cb27-1" aria-hidden="true" tabindex="-1"></a>resultSES<span class="ot">&lt;-</span>SESCV[[<span class="dv">3</span>]]</span></code></pre></div>
+<p>Karena ada 100 nilai alpha yang berbeda, tidak praktis untuk membuat boxplot untuk semua nilai tersebut. Bulatkan nilai alpha sebesar satu desimal <span class="math inline">\((0.1, 0.2, \ldots)\)</span> lalu buat boxplot:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="single-moving-average.html#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSES,<span class="fu">aes</span>(<span class="at">x=</span>alpha,<span class="at">y=</span>MSE,<span class="at">group=</span><span class="fu">round</span>(alpha,<span class="dv">1</span>)))<span class="sc">+</span></span>
+<span id="cb28-2"><a href="single-moving-average.html#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb28-3"><a href="single-moving-average.html#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MSE tiap Alpha&quot;</span>)<span class="sc">+</span></span>
+<span id="cb28-4"><a href="single-moving-average.html#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
+<p>Sepertinya, makin besar nilai alpha hasil pemulusan semakin baik. Ini berarti bobot observasi sekarang lebih besar dari observasi sebelumnya. :</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="single-moving-average.html#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSES,<span class="fu">aes</span>(<span class="at">x=</span>alpha,<span class="at">y=</span>MAE,<span class="at">group=</span><span class="fu">round</span>(alpha,<span class="dv">1</span>)))<span class="sc">+</span></span>
+<span id="cb29-2"><a href="single-moving-average.html#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb29-3"><a href="single-moving-average.html#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap Alpha&quot;</span>)<span class="sc">+</span></span>
+<span id="cb29-4"><a href="single-moving-average.html#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p>MAE nampaknya juga mengikuti pola tersebut.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="single-moving-average.html#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSES,<span class="fu">aes</span>(<span class="at">x=</span>alpha,<span class="at">y=</span>MAPE,<span class="at">group=</span><span class="fu">round</span>(alpha,<span class="dv">1</span>)))<span class="sc">+</span></span>
+<span id="cb30-2"><a href="single-moving-average.html#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb30-3"><a href="single-moving-average.html#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap Alpha&quot;</span>)<span class="sc">+</span></span>
+<span id="cb30-4"><a href="single-moving-average.html#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<p>MAPE juga mengikuti pola umum tersebut, tetapi nampaknya di <span class="math inline">\(\alpha=0.5\)</span> nilai outlier minimum. Lakukan agregasi:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="single-moving-average.html#cb31-1" aria-hidden="true" tabindex="-1"></a>aggregateSES<span class="ot">&lt;-</span>resultSES[,<span class="st">`</span><span class="at">.</span><span class="st">`</span>(<span class="at">meanMSE=</span><span class="fu">mean</span>(MSE),</span>
+<span id="cb31-2"><a href="single-moving-average.html#cb31-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMSE=</span><span class="fu">var</span>(MSE),</span>
+<span id="cb31-3"><a href="single-moving-average.html#cb31-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAPE=</span><span class="fu">mean</span>(MAPE),</span>
+<span id="cb31-4"><a href="single-moving-average.html#cb31-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAPE=</span><span class="fu">var</span>(MAPE),</span>
+<span id="cb31-5"><a href="single-moving-average.html#cb31-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAE=</span><span class="fu">mean</span>(MAE),</span>
+<span id="cb31-6"><a href="single-moving-average.html#cb31-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAE=</span><span class="fu">var</span>(MAE)), by<span class="ot">=</span><span class="fu">list</span>(alpha)]</span></code></pre></div>
+<p>Jika dilihat nilai <span class="math inline">\(\alpha\)</span> yang meminimumkan mean dari MSE, MAPE, MAE:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="single-moving-average.html#cb32-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb32-2"><a href="single-moving-average.html#cb32-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">n=</span><span class="dv">20</span>)),</span>
+<span id="cb32-3"><a href="single-moving-average.html#cb32-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">20</span>)),</span>
+<span id="cb32-4"><a href="single-moving-average.html#cb32-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">20</span>))</span>
+<span id="cb32-5"><a href="single-moving-average.html#cb32-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb32-6"><a href="single-moving-average.html#cb32-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.93</td>
+<td align="right">118.6033</td>
+</tr>
+<tr class="even">
+<td align="right">0.94</td>
+<td align="right">118.6035</td>
+</tr>
+<tr class="odd">
+<td align="right">0.92</td>
+<td align="right">118.6046</td>
+</tr>
+<tr class="even">
+<td align="right">0.95</td>
+<td align="right">118.6050</td>
+</tr>
+<tr class="odd">
+<td align="right">0.91</td>
+<td align="right">118.6075</td>
+</tr>
+<tr class="even">
+<td align="right">0.96</td>
+<td align="right">118.6076</td>
+</tr>
+<tr class="odd">
+<td align="right">0.97</td>
+<td align="right">118.6114</td>
+</tr>
+<tr class="even">
+<td align="right">0.90</td>
+<td align="right">118.6122</td>
+</tr>
+<tr class="odd">
+<td align="right">0.98</td>
+<td align="right">118.6161</td>
+</tr>
+<tr class="even">
+<td align="right">0.89</td>
+<td align="right">118.6187</td>
+</tr>
+<tr class="odd">
+<td align="right">0.99</td>
+<td align="right">118.6215</td>
+</tr>
+<tr class="even">
+<td align="right">0.88</td>
+<td align="right">118.6272</td>
+</tr>
+<tr class="odd">
+<td align="right">1.00</td>
+<td align="right">118.6276</td>
+</tr>
+<tr class="even">
+<td align="right">0.87</td>
+<td align="right">118.6379</td>
+</tr>
+<tr class="odd">
+<td align="right">0.86</td>
+<td align="right">118.6509</td>
+</tr>
+<tr class="even">
+<td align="right">0.85</td>
+<td align="right">118.6663</td>
+</tr>
+<tr class="odd">
+<td align="right">0.84</td>
+<td align="right">118.6842</td>
+</tr>
+<tr class="even">
+<td align="right">0.83</td>
+<td align="right">118.7049</td>
+</tr>
+<tr class="odd">
+<td align="right">0.82</td>
+<td align="right">118.7283</td>
+</tr>
+<tr class="even">
+<td align="right">0.81</td>
+<td align="right">118.7547</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.67</td>
+<td align="right">15.52554</td>
+</tr>
+<tr class="even">
+<td align="right">0.68</td>
+<td align="right">15.52555</td>
+</tr>
+<tr class="odd">
+<td align="right">0.66</td>
+<td align="right">15.52661</td>
+</tr>
+<tr class="even">
+<td align="right">0.69</td>
+<td align="right">15.52669</td>
+</tr>
+<tr class="odd">
+<td align="right">0.65</td>
+<td align="right">15.52823</td>
+</tr>
+<tr class="even">
+<td align="right">0.70</td>
+<td align="right">15.52864</td>
+</tr>
+<tr class="odd">
+<td align="right">0.64</td>
+<td align="right">15.53044</td>
+</tr>
+<tr class="even">
+<td align="right">0.71</td>
+<td align="right">15.53101</td>
+</tr>
+<tr class="odd">
+<td align="right">0.63</td>
+<td align="right">15.53324</td>
+</tr>
+<tr class="even">
+<td align="right">0.72</td>
+<td align="right">15.53382</td>
+</tr>
+<tr class="odd">
+<td align="right">0.62</td>
+<td align="right">15.53667</td>
+</tr>
+<tr class="even">
+<td align="right">0.73</td>
+<td align="right">15.53710</td>
+</tr>
+<tr class="odd">
+<td align="right">0.74</td>
+<td align="right">15.54075</td>
+</tr>
+<tr class="even">
+<td align="right">0.61</td>
+<td align="right">15.54091</td>
+</tr>
+<tr class="odd">
+<td align="right">0.75</td>
+<td align="right">15.54475</td>
+</tr>
+<tr class="even">
+<td align="right">0.60</td>
+<td align="right">15.54606</td>
+</tr>
+<tr class="odd">
+<td align="right">0.76</td>
+<td align="right">15.54908</td>
+</tr>
+<tr class="even">
+<td align="right">0.59</td>
+<td align="right">15.55193</td>
+</tr>
+<tr class="odd">
+<td align="right">0.77</td>
+<td align="right">15.55423</td>
+</tr>
+<tr class="even">
+<td align="right">0.58</td>
+<td align="right">15.55857</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.80</td>
+<td align="right">7.473352</td>
+</tr>
+<tr class="even">
+<td align="right">0.79</td>
+<td align="right">7.473372</td>
+</tr>
+<tr class="odd">
+<td align="right">0.81</td>
+<td align="right">7.473460</td>
+</tr>
+<tr class="even">
+<td align="right">0.78</td>
+<td align="right">7.473519</td>
+</tr>
+<tr class="odd">
+<td align="right">0.82</td>
+<td align="right">7.473694</td>
+</tr>
+<tr class="even">
+<td align="right">0.77</td>
+<td align="right">7.473794</td>
+</tr>
+<tr class="odd">
+<td align="right">0.83</td>
+<td align="right">7.474054</td>
+</tr>
+<tr class="even">
+<td align="right">0.76</td>
+<td align="right">7.474408</td>
+</tr>
+<tr class="odd">
+<td align="right">0.84</td>
+<td align="right">7.474539</td>
+</tr>
+<tr class="even">
+<td align="right">0.85</td>
+<td align="right">7.475329</td>
+</tr>
+<tr class="odd">
+<td align="right">0.75</td>
+<td align="right">7.475478</td>
+</tr>
+<tr class="even">
+<td align="right">0.86</td>
+<td align="right">7.476259</td>
+</tr>
+<tr class="odd">
+<td align="right">0.74</td>
+<td align="right">7.476700</td>
+</tr>
+<tr class="even">
+<td align="right">0.87</td>
+<td align="right">7.477311</td>
+</tr>
+<tr class="odd">
+<td align="right">0.73</td>
+<td align="right">7.478074</td>
+</tr>
+<tr class="even">
+<td align="right">0.88</td>
+<td align="right">7.478557</td>
+</tr>
+<tr class="odd">
+<td align="right">0.72</td>
+<td align="right">7.479601</td>
+</tr>
+<tr class="even">
+<td align="right">0.89</td>
+<td align="right">7.479915</td>
+</tr>
+<tr class="odd">
+<td align="right">0.71</td>
+<td align="right">7.481337</td>
+</tr>
+<tr class="even">
+<td align="right">0.90</td>
+<td align="right">7.481384</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Nilai-nilai dari tabel ini cukup kontradiktif. Untuk meminimumkan MSE, sebaiknya mengambil <span class="math inline">\(\alpha\)</span> sekitar 0.9. MAPE minimum di <span class="math inline">\(\alpha\)</span> 0.6 sampai 0.7, sedangkan MAE minimum di <span class="math inline">\(\alpha\)</span> 0.8. Bagaimana dengan ragam dari MSE, MAPE, dan MAE?</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="single-moving-average.html#cb33-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb33-2"><a href="single-moving-average.html#cb33-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, varMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb33-3"><a href="single-moving-average.html#cb33-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, varMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">5</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb33-4"><a href="single-moving-average.html#cb33-4" aria-hidden="true" tabindex="-1"></a>    knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, varMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">7</span>)],<span class="at">n=</span><span class="dv">7</span>))</span>
+<span id="cb33-5"><a href="single-moving-average.html#cb33-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb33-6"><a href="single-moving-average.html#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">varMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1.00</td>
+<td align="right">43152.94</td>
+</tr>
+<tr class="even">
+<td align="right">0.99</td>
+<td align="right">43192.67</td>
+</tr>
+<tr class="odd">
+<td align="right">0.98</td>
+<td align="right">43230.95</td>
+</tr>
+<tr class="even">
+<td align="right">0.97</td>
+<td align="right">43267.90</td>
+</tr>
+<tr class="odd">
+<td align="right">0.96</td>
+<td align="right">43303.65</td>
+</tr>
+<tr class="even">
+<td align="right">0.95</td>
+<td align="right">43338.34</td>
+</tr>
+<tr class="odd">
+<td align="right">0.94</td>
+<td align="right">43372.09</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">varMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.53</td>
+<td align="right">533.5416</td>
+</tr>
+<tr class="even">
+<td align="right">0.52</td>
+<td align="right">533.5533</td>
+</tr>
+<tr class="odd">
+<td align="right">0.54</td>
+<td align="right">533.5771</td>
+</tr>
+<tr class="even">
+<td align="right">0.51</td>
+<td align="right">533.6371</td>
+</tr>
+<tr class="odd">
+<td align="right">0.55</td>
+<td align="right">533.6623</td>
+</tr>
+<tr class="even">
+<td align="right">0.50</td>
+<td align="right">533.8066</td>
+</tr>
+<tr class="odd">
+<td align="right">0.56</td>
+<td align="right">533.8173</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">varMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1.00</td>
+<td align="right">42.69278</td>
+</tr>
+<tr class="even">
+<td align="right">0.99</td>
+<td align="right">42.72831</td>
+</tr>
+<tr class="odd">
+<td align="right">0.98</td>
+<td align="right">42.76264</td>
+</tr>
+<tr class="even">
+<td align="right">0.97</td>
+<td align="right">42.79589</td>
+</tr>
+<tr class="odd">
+<td align="right">0.96</td>
+<td align="right">42.82827</td>
+</tr>
+<tr class="even">
+<td align="right">0.95</td>
+<td align="right">42.85969</td>
+</tr>
+<tr class="odd">
+<td align="right">0.94</td>
+<td align="right">42.89025</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Ragam minimum MSE dan MAE minimum saat alpha mendekati 1, sedangkan ragam MAPE minimum saat alpha mendekati 0.5. Bagaimana dengan performa di tiap iterasi?</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="single-moving-average.html#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb34-2"><a href="single-moving-average.html#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSES,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MSE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb34-3"><a href="single-moving-average.html#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb34-4"><a href="single-moving-average.html#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MSE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb34-5"><a href="single-moving-average.html#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
+<p>Boxplot untuk iterasi ke-9 (saat pandemi) dan ke-15 (pasca pandemi dan perang Rusia-Ukraina) memiliki rataan dan keragaman yang cukup besar dibandingkan iterasi lainnya pada data testing karena adanya fluktuasi yang ekstrem pada rentang waktu tersebut. Fluktuasi tersebut tidak cocok untuk SES karena kurang dapat menangani data dengan tren.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="single-moving-average.html#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb35-2"><a href="single-moving-average.html#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSES,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAPE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb35-3"><a href="single-moving-average.html#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb35-4"><a href="single-moving-average.html#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAPE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb35-5"><a href="single-moving-average.html#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
+<p>Boxplot untuk iterasi ke-15 ternyata tidak memiliki MAPE besar. Ini terjadi karena MAPE lebih memboboti observasi dengan nilai amatan kecil (COVID saat harga minyak turun) daripada saat nilai amatan besar (Ukraina-Rusia saat terjadi inflasi harga minyak).</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="single-moving-average.html#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb36-2"><a href="single-moving-average.html#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultSES,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb36-3"><a href="single-moving-average.html#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb36-4"><a href="single-moving-average.html#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb36-5"><a href="single-moving-average.html#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
+<p>Boxplot MAE per iterasi secara umum lebih mengikuti MSE. Sama seperti SMA, nilai error homogen buruk di iterasi 9 dan 16.</p>
+</div>
+<div id="des" class="section level2 hasAnchor" number="4.4">
+<h2><span class="header-section-number">4.4</span> DES<a href="single-moving-average.html#des" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Load fungsi:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="single-moving-average.html#cb37-1" aria-hidden="true" tabindex="-1"></a>DESCV<span class="ot">&lt;-</span><span class="fu">fcCV</span>(weeklyCrude[,<span class="dv">3</span>],<span class="at">initialn=</span><span class="dv">36</span>,<span class="at">folds=</span><span class="dv">15</span>,<span class="at">type=</span><span class="st">&quot;DES&quot;</span>,<span class="at">alphrange=</span><span class="fu">seq</span>(<span class="fl">0.1</span>,<span class="dv">1</span>,<span class="fl">0.1</span>),<span class="at">betarange=</span><span class="fu">seq</span>(<span class="fl">0.1</span>,<span class="dv">1</span>,<span class="fl">0.1</span>))</span></code></pre></div>
+<p>Masukkan hasilnya:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="single-moving-average.html#cb38-1" aria-hidden="true" tabindex="-1"></a>resultDES<span class="ot">&lt;-</span>DESCV[[<span class="dv">3</span>]]</span></code></pre></div>
+<p>Karena parameter DES memiliki dua dimensi (alpha dan beta), cukup susah untuk menampilkan hasil optimalisasi parameter dalam suatu boxplot atau scatterplot. Oleh karena itu langsung buat agregasi:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="single-moving-average.html#cb39-1" aria-hidden="true" tabindex="-1"></a>aggregateDES<span class="ot">&lt;-</span>resultDES[,<span class="st">`</span><span class="at">.</span><span class="st">`</span>(<span class="at">meanMSE=</span><span class="fu">mean</span>(MSE),</span>
+<span id="cb39-2"><a href="single-moving-average.html#cb39-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMSE=</span><span class="fu">var</span>(MSE),</span>
+<span id="cb39-3"><a href="single-moving-average.html#cb39-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAPE=</span><span class="fu">mean</span>(MAPE),</span>
+<span id="cb39-4"><a href="single-moving-average.html#cb39-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAPE=</span><span class="fu">var</span>(MAPE),</span>
+<span id="cb39-5"><a href="single-moving-average.html#cb39-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAE=</span><span class="fu">mean</span>(MAE),</span>
+<span id="cb39-6"><a href="single-moving-average.html#cb39-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAE=</span><span class="fu">var</span>(MAE)), by<span class="ot">=</span><span class="fu">list</span>(alphrange,betarange)]</span></code></pre></div>
+<p>Buat heatmap untuk melihat titik mana memiliki rata-rata MSE yang rendah:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="single-moving-average.html#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aggregateDES, <span class="fu">aes</span>(alphrange, betarange)) <span class="sc">+</span></span>
+<span id="cb40-2"><a href="single-moving-average.html#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">sqrt</span>(meanMSE)), <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb40-3"><a href="single-moving-average.html#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low=</span><span class="st">&quot;#FFFFE0&quot;</span>,<span class="at">high=</span><span class="st">&quot;#DB0000&quot;</span>)<span class="sc">+</span></span>
+<span id="cb40-4"><a href="single-moving-average.html#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Beta&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-40-1.png" width="672" /></p>
+<p>Terlihat bahwa di beta lebih dari <span class="math inline">\(0.1\)</span> rata-rata dari MSE relatif lebih besar. Bagaimana dengan ragam dari MSE (menggunakan skala log agar mudah dilihat).</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="single-moving-average.html#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aggregateDES, <span class="fu">aes</span>(alphrange, betarange)) <span class="sc">+</span></span>
+<span id="cb41-2"><a href="single-moving-average.html#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">log</span>(varMSE)), <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb41-3"><a href="single-moving-average.html#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low=</span><span class="st">&quot;#FFFFE0&quot;</span>,<span class="at">high=</span><span class="st">&quot;#DB0000&quot;</span>)<span class="sc">+</span></span>
+<span id="cb41-4"><a href="single-moving-average.html#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Beta&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-41-1.png" width="672" /></p>
+<p>Ragam dari MSE mengikuti rata-rata MSE. Di beta lebih dari 0.1, ragam MSE relatif besar. Tampak bahwa ragam MSE juga mengecil jika alpha mendekati 1. Bagaimana dengan MAPE?</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="single-moving-average.html#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aggregateDES, <span class="fu">aes</span>(alphrange, betarange)) <span class="sc">+</span></span>
+<span id="cb42-2"><a href="single-moving-average.html#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="fu">aes</span>(<span class="at">fill =</span> meanMAPE), <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb42-3"><a href="single-moving-average.html#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low=</span><span class="st">&quot;#FFFFE0&quot;</span>,<span class="at">high=</span><span class="st">&quot;#DB0000&quot;</span>)<span class="sc">+</span></span>
+<span id="cb42-4"><a href="single-moving-average.html#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Beta&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-42-1.png" width="672" /></p>
+<p>Pola cukup mengikuti MSE sebelumnya, tetapi tampaknya MAPE minimum di alpha mendekati 0.5. Bagaimana dengan ragamnya:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="single-moving-average.html#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aggregateDES, <span class="fu">aes</span>(alphrange, betarange)) <span class="sc">+</span></span>
+<span id="cb43-2"><a href="single-moving-average.html#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">sqrt</span>(varMAPE)), <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb43-3"><a href="single-moving-average.html#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low=</span><span class="st">&quot;#FFFFE0&quot;</span>,<span class="at">high=</span><span class="st">&quot;#DB0000&quot;</span>)<span class="sc">+</span></span>
+<span id="cb43-4"><a href="single-moving-average.html#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Beta&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-43-1.png" width="672" /></p>
+<p>Ragam MAPE memiliki pola yang cukup beda. Ragam tersebut nampak minimum di diagonal antara Beta 0.5 dan alpha mendekati nol ke Beta 0.2 dan Alpha 0.25. Lakukan pemeringkatan:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="single-moving-average.html#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aggregateDES, <span class="fu">aes</span>(alphrange, betarange)) <span class="sc">+</span></span>
+<span id="cb44-2"><a href="single-moving-average.html#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="fu">aes</span>(<span class="at">fill =</span> meanMAE), <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb44-3"><a href="single-moving-average.html#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low=</span><span class="st">&quot;#FFFFE0&quot;</span>,<span class="at">high=</span><span class="st">&quot;#DB0000&quot;</span>)<span class="sc">+</span></span>
+<span id="cb44-4"><a href="single-moving-average.html#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Beta&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-44-1.png" width="672" /></p>
+<p>Mean dari MAE memiliki pola sama seperti sebelumnya.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="single-moving-average.html#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aggregateDES, <span class="fu">aes</span>(alphrange, betarange)) <span class="sc">+</span></span>
+<span id="cb45-2"><a href="single-moving-average.html#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">sqrt</span>(varMAE)), <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb45-3"><a href="single-moving-average.html#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low=</span><span class="st">&quot;#FFFFE0&quot;</span>,<span class="at">high=</span><span class="st">&quot;#DB0000&quot;</span>)<span class="sc">+</span></span>
+<span id="cb45-4"><a href="single-moving-average.html#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()<span class="sc">+</span><span class="fu">xlab</span>(<span class="st">&quot;Alpha&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot;Beta&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-45-1.png" width="672" /></p>
+<p>Akar dari ragam MAE tampak minimum di diagonal dan di alpha 0.3 sampai 0.6.</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="single-moving-average.html#cb46-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb46-2"><a href="single-moving-average.html#cb46-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)],<span class="at">n=</span><span class="dv">5</span>)),</span>
+<span id="cb46-3"><a href="single-moving-average.html#cb46-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">5</span>)],<span class="at">n=</span><span class="dv">5</span>)),</span>
+<span id="cb46-4"><a href="single-moving-average.html#cb46-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">7</span>)],<span class="at">n=</span><span class="dv">5</span>))</span>
+<span id="cb46-5"><a href="single-moving-average.html#cb46-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb46-6"><a href="single-moving-average.html#cb46-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">124.1593</td>
+</tr>
+<tr class="even">
+<td align="right">0.4</td>
+<td align="right">0.1</td>
+<td align="right">126.4938</td>
+</tr>
+<tr class="odd">
+<td align="right">0.5</td>
+<td align="right">0.1</td>
+<td align="right">129.2457</td>
+</tr>
+<tr class="even">
+<td align="right">1.0</td>
+<td align="right">0.1</td>
+<td align="right">129.8730</td>
+</tr>
+<tr class="odd">
+<td align="right">0.9</td>
+<td align="right">0.1</td>
+<td align="right">130.2131</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.4</td>
+<td align="right">0.1</td>
+<td align="right">14.87823</td>
+</tr>
+<tr class="even">
+<td align="right">0.5</td>
+<td align="right">0.1</td>
+<td align="right">14.97848</td>
+</tr>
+<tr class="odd">
+<td align="right">0.6</td>
+<td align="right">0.1</td>
+<td align="right">15.25584</td>
+</tr>
+<tr class="even">
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">15.48863</td>
+</tr>
+<tr class="odd">
+<td align="right">0.7</td>
+<td align="right">0.1</td>
+<td align="right">15.54700</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.4</td>
+<td align="right">0.1</td>
+<td align="right">7.407114</td>
+</tr>
+<tr class="even">
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">7.488104</td>
+</tr>
+<tr class="odd">
+<td align="right">0.5</td>
+<td align="right">0.1</td>
+<td align="right">7.501632</td>
+</tr>
+<tr class="even">
+<td align="right">0.6</td>
+<td align="right">0.1</td>
+<td align="right">7.607473</td>
+</tr>
+<tr class="odd">
+<td align="right">0.7</td>
+<td align="right">0.1</td>
+<td align="right">7.695825</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Nampak kombinasi alpha dan beta 0.4 dan 0.1 cukup baik dalam meminmumkan rataan error. Terlihat bahwa range alpha yang meminimumkan MSE dan MAPE kira kira 0.3 sampai 0.6. Pencarian lebih detail dapat dilakukan di daerah ini.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="single-moving-average.html#cb47-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb47-2"><a href="single-moving-average.html#cb47-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES, varMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb47-3"><a href="single-moving-average.html#cb47-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES, varMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">7</span>)),</span>
+<span id="cb47-4"><a href="single-moving-average.html#cb47-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES, varMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">8</span>)],<span class="at">n=</span><span class="dv">7</span>))</span>
+<span id="cb47-5"><a href="single-moving-average.html#cb47-5" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb47-6"><a href="single-moving-average.html#cb47-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">varMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1.0</td>
+<td align="right">0.1</td>
+<td align="right">36523.70</td>
+</tr>
+<tr class="even">
+<td align="right">0.9</td>
+<td align="right">0.1</td>
+<td align="right">38084.94</td>
+</tr>
+<tr class="odd">
+<td align="right">0.8</td>
+<td align="right">0.1</td>
+<td align="right">39798.92</td>
+</tr>
+<tr class="even">
+<td align="right">0.7</td>
+<td align="right">0.1</td>
+<td align="right">42024.62</td>
+</tr>
+<tr class="odd">
+<td align="right">0.1</td>
+<td align="right">0.4</td>
+<td align="right">42996.48</td>
+</tr>
+<tr class="even">
+<td align="right">0.6</td>
+<td align="right">0.1</td>
+<td align="right">44950.56</td>
+</tr>
+<tr class="odd">
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">45411.60</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">varMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.1</td>
+<td align="right">0.5</td>
+<td align="right">267.1882</td>
+</tr>
+<tr class="even">
+<td align="right">0.2</td>
+<td align="right">0.3</td>
+<td align="right">279.9528</td>
+</tr>
+<tr class="odd">
+<td align="right">0.3</td>
+<td align="right">0.2</td>
+<td align="right">291.4916</td>
+</tr>
+<tr class="even">
+<td align="right">0.4</td>
+<td align="right">0.2</td>
+<td align="right">301.5072</td>
+</tr>
+<tr class="odd">
+<td align="right">0.5</td>
+<td align="right">0.2</td>
+<td align="right">320.4104</td>
+</tr>
+<tr class="even">
+<td align="right">0.1</td>
+<td align="right">0.4</td>
+<td align="right">325.4686</td>
+</tr>
+<tr class="odd">
+<td align="right">0.6</td>
+<td align="right">0.2</td>
+<td align="right">350.0392</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">varMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.1</td>
+<td align="right">0.4</td>
+<td align="right">32.54265</td>
+</tr>
+<tr class="even">
+<td align="right">1.0</td>
+<td align="right">0.1</td>
+<td align="right">39.70195</td>
+</tr>
+<tr class="odd">
+<td align="right">0.9</td>
+<td align="right">0.1</td>
+<td align="right">41.10155</td>
+</tr>
+<tr class="even">
+<td align="right">0.8</td>
+<td align="right">0.1</td>
+<td align="right">42.32328</td>
+</tr>
+<tr class="odd">
+<td align="right">0.7</td>
+<td align="right">0.1</td>
+<td align="right">43.49530</td>
+</tr>
+<tr class="even">
+<td align="right">0.3</td>
+<td align="right">0.1</td>
+<td align="right">44.09136</td>
+</tr>
+<tr class="odd">
+<td align="right">1.0</td>
+<td align="right">0.2</td>
+<td align="right">44.69995</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Terlihat bahwa kriteria peminimuman ragam MSE dan MAPE berbeda dari peminimuman rata-rata MSE dan MAPE.</p>
+<p>Lakukan iterasi kedua untuk range <span class="math inline">\(\alpha\ 0.3-0.6\)</span>, <span class="math inline">\(\beta\ 0.01-0.2\)</span>:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="single-moving-average.html#cb48-1" aria-hidden="true" tabindex="-1"></a>DESCV2<span class="ot">&lt;-</span><span class="fu">fcCV</span>(weeklyCrude[,<span class="dv">3</span>],<span class="at">initialn=</span><span class="dv">36</span>,<span class="at">folds=</span><span class="dv">15</span>,<span class="at">type=</span><span class="st">&quot;DES&quot;</span>,<span class="at">alphrange=</span><span class="fu">seq</span>(<span class="fl">0.3</span>,<span class="fl">0.6</span>,<span class="fl">0.01</span>),<span class="at">betarange=</span><span class="fu">seq</span>(<span class="fl">0.01</span>,<span class="fl">0.2</span>,<span class="fl">0.01</span>))</span></code></pre></div>
+<p>Masukkan hasilnya:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="single-moving-average.html#cb49-1" aria-hidden="true" tabindex="-1"></a>resultDES2<span class="ot">&lt;-</span>DESCV2[[<span class="dv">3</span>]]</span></code></pre></div>
+<p>Langsung lakukan agregasi:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="single-moving-average.html#cb50-1" aria-hidden="true" tabindex="-1"></a>aggregateDES2<span class="ot">&lt;-</span>resultDES2[,<span class="st">`</span><span class="at">.</span><span class="st">`</span>(<span class="at">meanMSE=</span><span class="fu">mean</span>(MSE),</span>
+<span id="cb50-2"><a href="single-moving-average.html#cb50-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMSE=</span><span class="fu">var</span>(MSE),</span>
+<span id="cb50-3"><a href="single-moving-average.html#cb50-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAPE=</span><span class="fu">mean</span>(MAPE),</span>
+<span id="cb50-4"><a href="single-moving-average.html#cb50-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAPE=</span><span class="fu">var</span>(MAPE),</span>
+<span id="cb50-5"><a href="single-moving-average.html#cb50-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">meanMAE=</span><span class="fu">mean</span>(MAE),</span>
+<span id="cb50-6"><a href="single-moving-average.html#cb50-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">varMAE=</span><span class="fu">var</span>(MAE)), by<span class="ot">=</span><span class="fu">list</span>(alphrange,betarange)]</span></code></pre></div>
+<p>Nilai nilai apa saja yang menimumkan MSE, MAPE, dan MAE:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="single-moving-average.html#cb51-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb51-2"><a href="single-moving-average.html#cb51-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)],<span class="at">n=</span><span class="dv">5</span>)),</span>
+<span id="cb51-3"><a href="single-moving-average.html#cb51-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">5</span>)],<span class="at">n=</span><span class="dv">5</span>)),</span>
+<span id="cb51-4"><a href="single-moving-average.html#cb51-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">7</span>)],<span class="at">n=</span><span class="dv">5</span>))</span>
+<span id="cb51-5"><a href="single-moving-average.html#cb51-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb51-6"><a href="single-moving-average.html#cb51-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.59</td>
+<td align="right">0.05</td>
+<td align="right">116.5930</td>
+</tr>
+<tr class="even">
+<td align="right">0.60</td>
+<td align="right">0.05</td>
+<td align="right">116.5934</td>
+</tr>
+<tr class="odd">
+<td align="right">0.58</td>
+<td align="right">0.05</td>
+<td align="right">116.5967</td>
+</tr>
+<tr class="even">
+<td align="right">0.57</td>
+<td align="right">0.05</td>
+<td align="right">116.6047</td>
+</tr>
+<tr class="odd">
+<td align="right">0.56</td>
+<td align="right">0.05</td>
+<td align="right">116.6175</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.36</td>
+<td align="right">0.12</td>
+<td align="right">14.82092</td>
+</tr>
+<tr class="even">
+<td align="right">0.37</td>
+<td align="right">0.12</td>
+<td align="right">14.82199</td>
+</tr>
+<tr class="odd">
+<td align="right">0.35</td>
+<td align="right">0.12</td>
+<td align="right">14.82834</td>
+</tr>
+<tr class="even">
+<td align="right">0.38</td>
+<td align="right">0.12</td>
+<td align="right">14.83348</td>
+</tr>
+<tr class="odd">
+<td align="right">0.34</td>
+<td align="right">0.13</td>
+<td align="right">14.83575</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.39</td>
+<td align="right">0.09</td>
+<td align="right">7.390671</td>
+</tr>
+<tr class="even">
+<td align="right">0.40</td>
+<td align="right">0.09</td>
+<td align="right">7.390987</td>
+</tr>
+<tr class="odd">
+<td align="right">0.38</td>
+<td align="right">0.09</td>
+<td align="right">7.392621</td>
+</tr>
+<tr class="even">
+<td align="right">0.41</td>
+<td align="right">0.09</td>
+<td align="right">7.392794</td>
+</tr>
+<tr class="odd">
+<td align="right">0.42</td>
+<td align="right">0.09</td>
+<td align="right">7.395522</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Dan ragamnya.</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="single-moving-average.html#cb52-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb52-2"><a href="single-moving-average.html#cb52-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, varMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">5</span>)),</span>
+<span id="cb52-3"><a href="single-moving-average.html#cb52-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, varMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">5</span>)),</span>
+<span id="cb52-4"><a href="single-moving-average.html#cb52-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, varMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">8</span>)],<span class="at">n=</span><span class="dv">5</span>))</span>
+<span id="cb52-5"><a href="single-moving-average.html#cb52-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb52-6"><a href="single-moving-average.html#cb52-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">varMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.60</td>
+<td align="right">0.03</td>
+<td align="right">32909.41</td>
+</tr>
+<tr class="even">
+<td align="right">0.59</td>
+<td align="right">0.03</td>
+<td align="right">32944.17</td>
+</tr>
+<tr class="odd">
+<td align="right">0.58</td>
+<td align="right">0.03</td>
+<td align="right">32979.66</td>
+</tr>
+<tr class="even">
+<td align="right">0.60</td>
+<td align="right">0.04</td>
+<td align="right">32988.31</td>
+</tr>
+<tr class="odd">
+<td align="right">0.57</td>
+<td align="right">0.03</td>
+<td align="right">33015.65</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">varMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.31</td>
+<td align="right">0.2</td>
+<td align="right">291.3369</td>
+</tr>
+<tr class="even">
+<td align="right">0.30</td>
+<td align="right">0.2</td>
+<td align="right">291.4916</td>
+</tr>
+<tr class="odd">
+<td align="right">0.32</td>
+<td align="right">0.2</td>
+<td align="right">291.5246</td>
+</tr>
+<tr class="even">
+<td align="right">0.33</td>
+<td align="right">0.2</td>
+<td align="right">292.0687</td>
+</tr>
+<tr class="odd">
+<td align="right">0.34</td>
+<td align="right">0.2</td>
+<td align="right">292.9031</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">varMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.60</td>
+<td align="right">0.01</td>
+<td align="right">36.00838</td>
+</tr>
+<tr class="even">
+<td align="right">0.59</td>
+<td align="right">0.01</td>
+<td align="right">36.02458</td>
+</tr>
+<tr class="odd">
+<td align="right">0.58</td>
+<td align="right">0.01</td>
+<td align="right">36.04035</td>
+</tr>
+<tr class="even">
+<td align="right">0.57</td>
+<td align="right">0.01</td>
+<td align="right">36.05709</td>
+</tr>
+<tr class="odd">
+<td align="right">0.56</td>
+<td align="right">0.01</td>
+<td align="right">36.07567</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Plot iterasi mana yang susah:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="single-moving-average.html#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(resultDES,<span class="fu">aes</span>(<span class="at">x=</span>iter,<span class="at">y=</span>MAPE,<span class="at">group=</span>iter))<span class="sc">+</span></span>
+<span id="cb53-2"><a href="single-moving-average.html#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>()<span class="sc">+</span><span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb53-3"><a href="single-moving-average.html#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Boxplot MAPE tiap Iterasi&quot;</span>)<span class="sc">+</span></span>
+<span id="cb53-4"><a href="single-moving-average.html#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Iterasi&quot;</span>)<span class="sc">+</span><span class="fu">ylab</span>(<span class="st">&quot; &quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-53-1.png" width="672" /></p>
+<p>Sama seperti sebelumnya, performa pemulusan buruk saat COVID.</p>
+</div>
+<div id="bantuan-untuk-kesimpulan" class="section level2 hasAnchor" number="4.5">
+<h2><span class="header-section-number">4.5</span> Bantuan untuk kesimpulan<a href="single-moving-average.html#bantuan-untuk-kesimpulan" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="single-moving-average.html#cb54-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb54-2"><a href="single-moving-average.html#cb54-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb54-3"><a href="single-moving-average.html#cb54-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb54-4"><a href="single-moving-average.html#cb54-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSMA, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">1</span>))</span>
+<span id="cb54-5"><a href="single-moving-average.html#cb54-5" aria-hidden="true" tabindex="-1"></a>  ),<span class="at">caption=</span><span class="st">&quot;SMA&quot;</span></span>
+<span id="cb54-6"><a href="single-moving-average.html#cb54-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<caption>
+<span id="tab:unnamed-chunk-54">Table 4.1: </span>SMA
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">119.0668</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">15.2738</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">7.3915</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="single-moving-average.html#cb55-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb55-2"><a href="single-moving-average.html#cb55-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb55-3"><a href="single-moving-average.html#cb55-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb55-4"><a href="single-moving-average.html#cb55-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDMA, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">1</span>))</span>
+<span id="cb55-5"><a href="single-moving-average.html#cb55-5" aria-hidden="true" tabindex="-1"></a>  ),<span class="at">caption=</span><span class="st">&quot;DMA&quot;</span></span>
+<span id="cb55-6"><a href="single-moving-average.html#cb55-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<caption>
+<span id="tab:unnamed-chunk-54">Table 4.1: </span>DMA
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">128.7952</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">16.22624</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">M</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">7.782634</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="single-moving-average.html#cb56-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb56-2"><a href="single-moving-average.html#cb56-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb56-3"><a href="single-moving-average.html#cb56-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb56-4"><a href="single-moving-average.html#cb56-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateSES, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">6</span>)],<span class="at">n=</span><span class="dv">1</span>))</span>
+<span id="cb56-5"><a href="single-moving-average.html#cb56-5" aria-hidden="true" tabindex="-1"></a>  ),<span class="at">caption=</span><span class="st">&quot;SES&quot;</span></span>
+<span id="cb56-6"><a href="single-moving-average.html#cb56-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<caption>
+<span id="tab:unnamed-chunk-54">Table 4.1: </span>SES
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.93</td>
+<td align="right">118.6033</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.67</td>
+<td align="right">15.52554</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alpha</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.8</td>
+<td align="right">7.473352</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="single-moving-average.html#cb57-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kables</span>(<span class="fu">list</span>(</span>
+<span id="cb57-2"><a href="single-moving-average.html#cb57-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, meanMSE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb57-3"><a href="single-moving-average.html#cb57-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, meanMAPE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">5</span>)],<span class="at">n=</span><span class="dv">1</span>)),</span>
+<span id="cb57-4"><a href="single-moving-average.html#cb57-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(<span class="fu">setorder</span>(aggregateDES2, meanMAE)[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">7</span>)],<span class="at">n=</span><span class="dv">1</span>))</span>
+<span id="cb57-5"><a href="single-moving-average.html#cb57-5" aria-hidden="true" tabindex="-1"></a>  ),<span class="at">caption=</span><span class="st">&quot;DES&quot;</span></span>
+<span id="cb57-6"><a href="single-moving-average.html#cb57-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<table class="kable_wrapper">
+<caption>
+<span id="tab:unnamed-chunk-54">Table 4.1: </span>DES
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.59</td>
+<td align="right">0.05</td>
+<td align="right">116.593</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.36</td>
+<td align="right">0.12</td>
+<td align="right">14.82092</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="right">alphrange</th>
+<th align="right">betarange</th>
+<th align="right">meanMAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.39</td>
+<td align="right">0.09</td>
+<td align="right">7.390671</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="praproses-dan-eksplorasi-data-2017-2022.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="pemodelan.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/USERNAME/REPO/edit/BRANCH/03-pemulusanrev.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
